@@ -1,9 +1,9 @@
 <template>
   <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-4 sm:py-6 lg:py-8">
-    <div class="block p-6 bg-white border border-gray-200 rounded-lg shadow">
-      <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">My Account</h5>
-      <div class="font-normal text-gray-700">
-        <select aria-label="Select account" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" v-model="selectedAccount">
+    <div class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8">
+      <h5>My Account</h5>
+      <div>
+        <select aria-label="Select account" v-model="selectedAccount">
           <option v-for="(account, i) in accounts" :key="i" :value="account">{{ account }}</option>
         </select>
       </div>
