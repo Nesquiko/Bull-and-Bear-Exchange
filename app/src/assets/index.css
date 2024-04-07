@@ -1,0 +1,41 @@
+/* style.css
+	Defines the style of index.js
+// =============================================================================
+//                    YOU DO NOT NEED TO EDIT THIS FILE
+// =============================================================================
+// if you want to have cooler battleship pictures, change boat.png in media/
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+h1 {
+  @apply text-3xl font-bold my-4;
+}
+
+h2 {
+  @apply text-2xl font-bold my-4;
+}
+
+h3 {
+  @apply text-xl font-bold my-4;
+}
+
+h4 {
+  @apply text-lg font-bold my-4;
+}
+
+p {
+  @apply text-base my-4;
+}
+
+label {
+  @apply text-base mt-4 mb-2;
+}
+
+input {
+  @apply mt-2 mb-4 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5;
+}
+button {
+  @apply mt-2 mb-4 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 focus:outline-none;
+}
