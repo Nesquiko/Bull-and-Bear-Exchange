@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import {BBToken} from "../src/BBToken.sol";
 import {BBExchange} from "../src/BBExchange.sol";
 import {DeployContracts} from "../script/DeployContracts.s.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 contract BBExchangeTest is Test {
     DeployContracts deployer;
@@ -35,7 +35,7 @@ contract BBExchangeTest is Test {
         vm.prank(user);
         // if the next call (excluding calls to test functions) doesn't revert
         // with the specified error, fail test
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user));
-        token.mint(100);
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InvalidReceiver.selector, address(0)));
+        token.transfer(address(0), 10);
     }
 }
