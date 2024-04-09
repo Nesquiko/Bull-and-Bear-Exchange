@@ -63,8 +63,8 @@ import {useSwap} from "@/composables/swap";
 import {useLiquidity} from "@/composables/liquidity";
 
 // Constants
-const tokenSymbol = 'Fx'
-const exchangeName = 'FxSwap'
+const tokenSymbol = 'BB'
+const exchangeName = 'BBToken'
 
 const accounts = [
   'aaa',
