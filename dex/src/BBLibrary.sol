@@ -53,10 +53,24 @@ library BBLibrary {
     /// @param swapAmount (dx) amount of tokens/wei to swap
     /// @param swapReserve (x) amount of swapped asset in reserves
     /// @param targetReserve (y) amount of asset for which the swapper is swapping
+    /// @return Amount of the swap target asset at current reserves
+    function calculateAmountOut(uint256 swapAmount, uint256 swapReserve, uint256 targetReserve)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 numerator = targetReserve * swapAmount;
+        uint256 denominator = swapReserve + swapAmount;
+        return numerator / denominator;
+    }
+
+    /// @param swapAmount (dx) amount of tokens/wei to swap
+    /// @param swapReserve (x) amount of swapped asset in reserves
+    /// @param targetReserve (y) amount of asset for which the swapper is swapping
     /// @param feeNum numerator of the fee fraction
     /// @param feeDenom denominator of the fee fraction
     /// @return Amount of the swap target asset at current reserves with fee accounted for
-    function calculateAmountOut(
+    function calculateAmountOutWithFee(
         uint256 swapAmount,
         uint256 swapReserve,
         uint256 targetReserve,
