@@ -26,6 +26,43 @@ contract BBExchangeTest is Test {
         (token, exchange) = deployer.deployContracts(user, BB_TOKEN_SUPPLY);
     }
 
+    modifier initializedExchange(uint256 liquidityAmount, address owner) {
+        createAllowance(owner, address(exchange), liquidityAmount);
+        vm.prank(owner);
+        exchange.createPool{value: liquidityAmount}(liquidityAmount);
+        _;
+    }
+
+    function testGetTokenAmountCorrect() public initializedExchange(5_000, user) {
+        uint256 tokenAmount = exchange.getTokenAmount(10);
+        assertEq(tokenAmount, 9);
+    }
+
+    function testGetTokenAmountZeroWeiAmount() public initializedExchange(5_000, user) {
+        vm.expectRevert(bytes("Wei amount must be greater than zero"));
+        exchange.getTokenAmount(0);
+    }
+
+    function testGetTokenAmountPoolNotInitialized() public {
+        vm.expectRevert(bytes("Invalid reserves"));
+        exchange.getTokenAmount(1);
+    }
+
+    function testGetWeiAmountCorrect() public initializedExchange(5_000, user) {
+        uint256 weiAmount = exchange.getWeiAmount(10);
+        assertEq(weiAmount, 9);
+    }
+
+    function testGetWeiAmountZeroTokenAmount() public initializedExchange(5_000, user) {
+        vm.expectRevert(bytes("Token amount must be greater than zero"));
+        exchange.getWeiAmount(0);
+    }
+
+    function testGetWeiAmountPoolNotInitialized() public {
+        vm.expectRevert(bytes("Invalid reserves"));
+        exchange.getWeiAmount(1);
+    }
+
     function testCreatePoolNoEthProvided() public {
         uint256 tokenLiquidity = 5_000;
         uint256 ethLiquidity = 0;
@@ -68,7 +105,7 @@ contract BBExchangeTest is Test {
         vm.prank(user);
         exchange.createPool{value: ethLiquidity}(tokenLiquidity);
 
-        assertEq(ethLiquidity, exchange.ethReserves());
+        assertEq(ethLiquidity, exchange.weiReserves());
         assertEq(ethLiquidity, address(exchange).balance);
     }
 

@@ -2,21 +2,19 @@
 pragma solidity ^0.8.18;
 
 import {BBToken} from "./BBToken.sol";
+import {BBLibrary} from "./BBLibrary.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BBExchange is Ownable {
     string public constant EXCHANGE_NAME = "Bull and Bear Exchange";
 
-    BBToken public token;
+    BBToken public immutable token;
 
-    // Constant: x * y = k
-    uint256 public k;
-    // Liquidity pool for the exchange
-    uint256 public tokenReserves = 0;
-    uint256 public ethReserves = 0;
+    uint256 public k; // Constant: x * y = k
+    uint256 public tokenReserves = 0; // value on the x axis
+    uint256 public weiReserves = 0; // value on the y axis
 
     mapping(address => uint256) private lps;
-
     // Needed for looping through the keys of the lps mapping
     address[] private lpProviders;
 
@@ -37,7 +35,7 @@ contract BBExchange is Ownable {
 
         // require pool does not yet exist:
         require(tokenReserves == 0, "Token reserves was not 0");
-        require(ethReserves == 0, "ETH reserves was not 0.");
+        require(weiReserves == 0, "ETH reserves was not 0.");
 
         // require nonzero values were sent
         require(msg.value > 0, "Need eth to create pool.");
@@ -47,8 +45,8 @@ contract BBExchange is Ownable {
 
         token.transferFrom(msg.sender, address(this), amountTokens);
         tokenReserves = token.balanceOf(address(this));
-        ethReserves = msg.value;
-        k = tokenReserves * ethReserves;
+        weiReserves = msg.value;
+        k = tokenReserves * weiReserves;
     }
 
     // Function removeLP: removes a liquidity provider from the list.
@@ -99,13 +97,14 @@ contract BBExchange is Ownable {
 
     /* ========================= Swap Functions =========================  */
 
-    // Function swapTokensForETH: Swaps your token with ETH
-    // You can change the inputs, or the scope of your function, as needed.
+    /// @notice Swaps tokens for ETH
+    /// @param tokenAmount how many tokens the sender is swapping
     function swapTokensForETH(uint256 tokenAmount, uint256 maxExchangeRate) external payable {
         require(tokenAmount > 0, "Need tokens to swap");
         require(token.balanceOf(msg.sender) >= tokenAmount, "Not enough tokens");
+        require(token.allowance(msg.sender, address(this)) >= tokenAmount, "Token transfer not allowed");
 
-        uint256 ethAmount = getEthAmount(tokenAmount);
+        uint256 ethAmount = getWeiAmount(tokenAmount);
         uint256 actualExchangeRate = (ethAmount * 1e18) / tokenAmount; // assuming 18 decimal places for ETH
         require(actualExchangeRate <= maxExchangeRate, "Exchange rate too high");
 
@@ -114,7 +113,7 @@ contract BBExchange is Ownable {
 
         // Update reserves and send ETH to user
         tokenReserves += tokenAmount;
-        ethReserves -= ethAmount;
+        weiReserves -= ethAmount;
 
         // Transfer ETH to user
         payable(msg.sender).transfer(ethAmount);
@@ -132,40 +131,26 @@ contract BBExchange is Ownable {
         require(actualExchangeRate <= maxExchangeRate, "Exchange rate too high");
 
         // Update reserves and send tokens to user
-        ethReserves += ethAmount;
+        weiReserves += ethAmount;
         tokenReserves -= tokenAmount;
 
         // Transfer Tokens to user
         token.transfer(msg.sender, tokenAmount);
     }
 
-    function getEthAmount(uint256 tokenAmount) private view returns (uint256) {
+    /// @return Value of tokenAmount in wei at current exchange rate with fee accounted for
+    function getWeiAmount(uint256 tokenAmount) public view returns (uint256) {
         require(tokenAmount > 0, "Token amount must be greater than zero");
-        require(tokenReserves > 0 && ethReserves > 0, "Invalid reserves");
+        require(tokenReserves > 0 && weiReserves > 0, "Invalid reserves");
 
-        // Calculate ETH received without the fee
-        uint256 ethReceived = (tokenAmount * ethReserves) / (tokenReserves + tokenAmount);
-
-        // Calculate the fee on the ETH amount
-        uint256 fee = (ethReceived * swapFeeNumerator) / swapFeeDenominator;
-        ethReceived -= fee;
-
-        require(ethReceived <= ethReserves, "Not enough ETH in reserves");
-        return ethReceived;
+        return
+            BBLibrary.calculateAmountOut(tokenAmount, tokenReserves, weiReserves, swapFeeNumerator, swapFeeDenominator);
     }
 
-    function getTokenAmount(uint256 ethAmount) private view returns (uint256) {
-        require(ethAmount > 0, "ETH amount must be greater than zero");
-        require(tokenReserves > 0 && ethReserves > 0, "Invalid reserves");
+    function getTokenAmount(uint256 weiAmount) public view returns (uint256) {
+        require(weiAmount > 0, "Wei amount must be greater than zero");
+        require(tokenReserves > 0 && weiReserves > 0, "Invalid reserves");
 
-        // Calculate Tokens received without the fee
-        uint256 tokensReceived = (ethAmount * tokenReserves) / (ethReserves + ethAmount);
-
-        // Calculate the fee on the token amount
-        uint256 fee = (tokensReceived * swapFeeNumerator) / swapFeeDenominator;
-        tokensReceived -= fee;
-
-        require(tokensReceived <= tokenReserves, "Not enough Tokens in reserves");
-        return tokensReceived;
+        return BBLibrary.calculateAmountOut(weiAmount, weiReserves, tokenReserves, swapFeeNumerator, swapFeeDenominator);
     }
 }
