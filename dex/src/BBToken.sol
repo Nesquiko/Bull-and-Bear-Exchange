@@ -19,4 +19,10 @@ contract BBToken is ERC20 {
     constructor(uint256 supply) ERC20("Bull and Bear Token", "BBT") {
         _mint(msg.sender, supply * 10 ** decimals());
     }
+
+    /// @notice since the token should not be divisible to fractional
+    ///     values, override decimals() to return 0
+    function decimals() public pure override returns (uint8) {
+        return 0;
+    }
 }

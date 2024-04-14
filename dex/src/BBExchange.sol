@@ -9,9 +9,11 @@ contract BBExchange is Ownable {
 
     BBToken public token;
 
+    // Constant: x * y = k
+    uint256 public k;
     // Liquidity pool for the exchange
-    uint256 private tokenReserves = 0;
-    uint256 private ethReserves = 0;
+    uint256 public tokenReserves = 0;
+    uint256 public ethReserves = 0;
 
     mapping(address => uint256) private lps;
 
@@ -21,9 +23,6 @@ contract BBExchange is Ownable {
     // liquidity rewards
     uint256 private swapFeeNumerator = 3;
     uint256 private swapFeeDenominator = 100;
-
-    // Constant: x * y = k
-    uint256 private k;
 
     constructor(address bbTokenAddr, address initialOwner) Ownable(initialOwner) {
         token = BBToken(bbTokenAddr);

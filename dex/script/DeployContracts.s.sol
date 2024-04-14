@@ -7,17 +7,38 @@ import {BBToken} from "../src/BBToken.sol";
 import {BBExchange} from "../src/BBExchange.sol";
 
 contract DeployContracts is Script {
-    uint256 private constant BB_TOKEN_SUPPLY = 5000;
+    uint256 private constant BB_TOKEN_SUPPLY = 5_000;
 
     function run() external returns (BBToken token, BBExchange exchange, address owner) {
         DeployConfig config = new DeployConfig();
         (, uint256 deployerPK) = config.activeConfig();
         owner = vm.addr(deployerPK);
 
-        vm.startBroadcast(deployerPK);
-        token = new BBToken(BB_TOKEN_SUPPLY);
-        exchange = new BBExchange(address(token), owner);
-        vm.stopBroadcast();
+        token = deployToken(BB_TOKEN_SUPPLY, owner);
+        exchange = deployExchange(address(token), owner);
         return (token, exchange, owner);
+    }
+
+    function deployContracts(address deployer, uint256 tokenSupply)
+        external
+        returns (BBToken token, BBExchange exchange)
+    {
+        token = deployToken(tokenSupply, deployer);
+        exchange = deployExchange(address(token), deployer);
+        return (token, exchange);
+    }
+
+    function deployToken(uint256 supply, address deployer) public returns (BBToken) {
+        vm.startBroadcast(deployer);
+        BBToken token = new BBToken(supply);
+        vm.stopBroadcast();
+        return token;
+    }
+
+    function deployExchange(address token, address deployer) public returns (BBExchange) {
+        vm.startBroadcast(deployer);
+        BBExchange exchange = new BBExchange(token, deployer);
+        vm.stopBroadcast();
+        return exchange;
     }
 }
