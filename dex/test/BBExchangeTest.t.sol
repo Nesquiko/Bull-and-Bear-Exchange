@@ -65,7 +65,6 @@ contract BBExchangeTest is Test {
 
         assertEq(expectedTokenReserves, exchange.tokenReserves());
         assertEq(expectedWeiReserves, exchange.weiReserves());
-        assertEq(expectedK, exchange.k());
     }
 
     function testSwapETHForTokensNotEnoughLiquidity() public initializedExchange(2, lp) {
@@ -101,7 +100,6 @@ contract BBExchangeTest is Test {
 
         assertEq(expectedTokenReserves, exchange.tokenReserves());
         assertEq(expectedWeiReserves, exchange.weiReserves());
-        assertEq(expectedK, exchange.k());
     }
 
     function testSwapTokensForETHTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
@@ -229,6 +227,19 @@ contract BBExchangeTest is Test {
         exchange.createPool{value: ethLiquidity}(tokenLiquidity);
 
         assertEq(k, exchange.k());
+    }
+
+    function testCreatePoolAddLiquidityToCreator() public {
+        uint256 tokenLiquidity = LP_TOKEN_BALANCE;
+        uint256 ethLiquidity = 5_000;
+        createAllowance(lp, address(exchange), tokenLiquidity);
+        vm.prank(lp);
+        exchange.createPool{value: ethLiquidity}(tokenLiquidity);
+
+        uint256 expectedLiquidity = 4999; // 5000 - MIN_LIQUIDITY
+        assertEq(expectedLiquidity, exchange.lpLiquidity(lp));
+        assertEq(lp, exchange.lpAt(0));
+        assertEq(expectedLiquidity, exchange.totalLiquidity());
     }
 
     function createAllowance(address owner, address spender, uint256 amount) public {

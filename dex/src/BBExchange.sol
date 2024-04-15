@@ -19,6 +19,7 @@ contract BBExchange is Ownable {
     mapping(address => uint256) private lps;
     // Needed for looping through the keys of the lps mapping
     address[] private lpProviders;
+    uint256 public totalLiquidity;
 
     // liquidity rewards
     uint256 private swapFeeNumerator = 3;
@@ -49,6 +50,11 @@ contract BBExchange is Ownable {
         tokenReserves = token.balanceOf(address(this));
         weiReserves = msg.value;
         k = tokenReserves * weiReserves;
+
+        uint256 liquidity = weiReserves - MIN_LIQUIDITY; // locks MIN_LIQUIDITY
+        lps[msg.sender] = liquidity;
+        totalLiquidity += liquidity;
+        lpProviders.push(msg.sender);
     }
 
     // Function removeLP: removes a liquidity provider from the list.
@@ -113,7 +119,6 @@ contract BBExchange is Ownable {
 
         tokenReserves += tokenAmount;
         weiReserves -= withFee;
-        k = tokenReserves * weiReserves;
 
         (bool succes,) = payable(msg.sender).call{value: withFee}("");
         require(succes, "Transfer failed");
@@ -130,7 +135,6 @@ contract BBExchange is Ownable {
 
         weiReserves += ethAmount;
         tokenReserves -= withFee;
-        k = tokenReserves * weiReserves;
 
         token.transfer(msg.sender, withFee);
     }
@@ -163,5 +167,13 @@ contract BBExchange is Ownable {
                 weiAmount, weiReserves, tokenReserves, swapFeeNumerator, swapFeeDenominator
                 )
         );
+    }
+
+    function lpLiquidity(address lp) external view returns (uint256) {
+        return lps[lp];
+    }
+
+    function lpAt(uint256 index) external view returns (address) {
+        return lpProviders[index];
     }
 }
