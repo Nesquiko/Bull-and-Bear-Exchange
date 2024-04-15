@@ -12,7 +12,7 @@ contract DeployContracts is Script {
     function run() external returns (BBToken token, BBExchange exchange, address owner) {
         DeployConfig config = new DeployConfig();
         (, uint256 deployerPK) = config.activeConfig();
-        owner = vm.addr(deployerPK);
+        owner = vm.rememberKey(deployerPK);
 
         token = deployToken(BB_TOKEN_SUPPLY, owner);
         exchange = deployExchange(address(token), owner);
