@@ -82,4 +82,19 @@ library BBLibrary {
         uint256 denominator = swapReserve * feeDenom + feeInverse * swapAmount;
         return numerator / denominator;
     }
+
+    /// @notice Calculates the quote of base asset to quoted asset at current exchange rate
+    /// @param baseAmount amount of tokens/wei as base for the quote
+    /// @param baseReserve amount of base asset in reserves
+    /// @param quoteReserve amount of quoted assets in reserves
+    /// @return equivalent amount of the base asset to the quoted one
+    function calculateQuote(uint256 baseAmount, uint256 baseReserve, uint256 quoteReserve)
+        internal
+        pure
+        returns (uint256)
+    {
+        require(baseAmount > 0, "baseReserve can't be zero");
+        require(baseReserve > 0 && quoteReserve > 0, "invalid reserves");
+        return baseAmount * quoteReserve / baseReserve;
+    }
 }

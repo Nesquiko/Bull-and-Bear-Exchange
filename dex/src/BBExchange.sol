@@ -76,12 +76,65 @@ contract BBExchange is Ownable {
 
     /* ========================= Liquidity Provider Functions =========================  */
 
-    // Function addLiquidity: Adds liquidity given a supply of ETH (sent to the contract as msg.value).
-    // You can change the inputs, or the scope of your function, as needed.
-    function addLiquidity(uint256 maxExchangeRate, uint256 minExchangeRate) external payable {
-        /**
-         * TODO: Implement this function ******
-         */
+    /// @notice Adds liquidity given a supply of ETH and BBToken
+    /// @notice liquidity will be added in rate range from minWeiAmount/tokenAmount to msg.value/minTokenAmount
+    /// @dev inspired by https://docs.uniswap.org/contracts/v2/guides/smart-contract-integration/providing-liquidity
+    ///     and https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-02#addliquidity
+    /// @dev msg.value amount of wei to be added to lp
+    /// @param minWeiAmount in case of deprecation of wei against BBToken (meaning,
+    ///     BBToken has appreciated), this serves as tolerance/protection mechanism
+    ///     for the liquidity provider, ensuresing liquidity isn't added at
+    ///     "bad" exchange rate (each liquidity provider must calculate and consider
+    ///     what is "bad" exchange rate for him/her)
+    /// @param tokenAmount amount of tokens to be added to lp
+    /// @param minTokenAmount in case of deprecation of BBToken against ETH (meaning,
+    ///     ETH has appreciated), this serves as tolerance/protection mechanism
+    ///     for the liquidity provider, ensuresing liquidity isn't added at
+    ///     "bad" exchange rate (each liquidity provider must calculate and consider
+    ///     what is "bad" exchange rate for him/her)
+    function addLiquidity(uint256 minWeiAmount, uint256 tokenAmount, uint256 minTokenAmount) external payable {
+        uint256 weiAmount = msg.value;
+        require(weiAmount > 0, "No ETH provided");
+        require(weiAmount >= minWeiAmount, "minWeiAmount can't be more than msg.value");
+        require(tokenAmount > 0, "No tokens provided");
+        require(tokenAmount >= minTokenAmount, "minTokenAmount can't be less than tokenAmount");
+        require(token.balanceOf(msg.sender) >= tokenAmount, "Not enough tokens");
+        require(token.allowance(msg.sender, address(this)) >= tokenAmount, "Not enough token allowed for transfer");
+
+        uint256 weiLiquidityAmount;
+        uint256 tokenLiquidityAmount;
+
+        uint256 tokenQuote = BBLibrary.calculateQuote(weiAmount, weiReserves, tokenReserves);
+        if (tokenQuote <= tokenAmount) {
+            // Wei depreciated, BBToken appreciated, meaning the rate will be weiAmount/tokenQuote
+            require(tokenQuote >= minTokenAmount, "token quote bellow min");
+            weiLiquidityAmount = weiAmount;
+            tokenLiquidityAmount = tokenQuote;
+        } else {
+            // Wei appreciated, BBToken depreciated, meaning the rate will be weiQuote/tokenAmount
+            uint256 weiQuote = BBLibrary.calculateQuote(tokenAmount, tokenReserves, weiReserves);
+            require(weiQuote >= minWeiAmount, "wei quote bellow min");
+            weiLiquidityAmount = weiQuote;
+            tokenLiquidityAmount = tokenAmount;
+        }
+
+        bool succes = token.transferFrom(msg.sender, address(this), tokenLiquidityAmount);
+        require(succes, "token transfer failed");
+        if (weiAmount - weiLiquidityAmount != 0) {
+            (succes,) = msg.sender.call{value: weiAmount - weiLiquidityAmount}("");
+            require(succes, "wei transfer failed");
+        }
+
+        uint256 liquidity = weiLiquidityAmount * totalLiquidity / weiReserves;
+        if (lps[msg.sender] == 0) {
+            lpProviders.push(msg.sender);
+        }
+        lps[msg.sender] += liquidity;
+        totalLiquidity += liquidity;
+
+        weiReserves += weiLiquidityAmount;
+        tokenReserves += tokenLiquidityAmount;
+        k = weiReserves * tokenReserves;
     }
 
     // Function removeLiquidity: Removes liquidity given the desired amount of ETH to remove.
