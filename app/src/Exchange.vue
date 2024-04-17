@@ -76,8 +76,9 @@ import {
 import {ethers} from "ethers";
 
 const accounts = await provider.listAccounts()
+console.log(accounts)
 
-const selectedAccount = ref(accounts[0]);
+const selectedAccount = ref(accounts[9]);
 
 const tokenEthRate = ref(0);
 const ethTokenRate = ref(0);
@@ -111,7 +112,7 @@ if (poolState.tokenLiquidity === 0
   // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).approve(exchangeAddress, total_supply);
   // tokenContract.connect(await provider.getSigner(selectedAccount.value.address))
   // // initialize pool with equal amounts of ETH and tokens, so exchange rate begins as 1:1
-  await exchangeContract.connect(await provider.getSigner(selectedAccount.value.address)).createPool(5000, {value: ethers.parseUnits("5000", "wei")});
+  await exchangeContract.connect(await provider.getSigner(selectedAccount.value.address)).createPool(5000);
 }
 console.log("init finished");
 
