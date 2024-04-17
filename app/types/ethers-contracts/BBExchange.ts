@@ -26,10 +26,16 @@ import type {
 export interface BBExchangeInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "EXCHANGE_NAME"
+      | "MIN_LIQUIDITY"
       | "addLiquidity"
       | "createPool"
-      | "exchange_name"
       | "getSwapFee"
+      | "getTokenAmount"
+      | "getWeiAmount"
+      | "k"
+      | "lpAt"
+      | "lpLiquidity"
       | "owner"
       | "removeAllLiquidity"
       | "removeLiquidity"
@@ -37,26 +43,47 @@ export interface BBExchangeInterface extends Interface {
       | "swapETHForTokens"
       | "swapTokensForETH"
       | "token"
+      | "tokenReserves"
+      | "totalLiquidity"
       | "transferOwnership"
+      | "weiReserves"
   ): FunctionFragment;
 
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
 
   encodeFunctionData(
+    functionFragment: "EXCHANGE_NAME",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MIN_LIQUIDITY",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "addLiquidity",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "createPool",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "exchange_name",
+    functionFragment: "getSwapFee",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getSwapFee",
-    values?: undefined
+    functionFragment: "getTokenAmount",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getWeiAmount",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "k", values?: undefined): string;
+  encodeFunctionData(functionFragment: "lpAt", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "lpLiquidity",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
@@ -73,28 +100,58 @@ export interface BBExchangeInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "swapETHForTokens",
-    values: [BigNumberish]
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "swapTokensForETH",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "token", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "tokenReserves",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "totalLiquidity",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
+  encodeFunctionData(
+    functionFragment: "weiReserves",
+    values?: undefined
+  ): string;
 
+  decodeFunctionResult(
+    functionFragment: "EXCHANGE_NAME",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MIN_LIQUIDITY",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "addLiquidity",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "createPool", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getSwapFee", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "exchange_name",
+    functionFragment: "getTokenAmount",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "getSwapFee", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getWeiAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "k", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "lpAt", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "lpLiquidity",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "removeAllLiquidity",
@@ -118,7 +175,19 @@ export interface BBExchangeInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "token", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "tokenReserves",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "totalLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "weiReserves",
     data: BytesLike
   ): Result;
 }
@@ -179,8 +248,16 @@ export interface BBExchange extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  EXCHANGE_NAME: TypedContractMethod<[], [string], "view">;
+
+  MIN_LIQUIDITY: TypedContractMethod<[], [bigint], "view">;
+
   addLiquidity: TypedContractMethod<
-    [max_exchange_rate: BigNumberish, min_exchange_rate: BigNumberish],
+    [
+      minWeiAmount: BigNumberish,
+      tokenAmount: BigNumberish,
+      minTokenAmount: BigNumberish
+    ],
     [void],
     "payable"
   >;
@@ -191,14 +268,30 @@ export interface BBExchange extends BaseContract {
     "payable"
   >;
 
-  exchange_name: TypedContractMethod<[], [string], "view">;
-
   getSwapFee: TypedContractMethod<[], [[bigint, bigint]], "view">;
+
+  getTokenAmount: TypedContractMethod<
+    [weiAmount: BigNumberish],
+    [[bigint, bigint] & { tokenAmount: bigint; withFee: bigint }],
+    "view"
+  >;
+
+  getWeiAmount: TypedContractMethod<
+    [tokenAmount: BigNumberish],
+    [[bigint, bigint] & { weiAmount: bigint; withFee: bigint }],
+    "view"
+  >;
+
+  k: TypedContractMethod<[], [bigint], "view">;
+
+  lpAt: TypedContractMethod<[index: BigNumberish], [string], "view">;
+
+  lpLiquidity: TypedContractMethod<[lp: AddressLike], [bigint], "view">;
 
   owner: TypedContractMethod<[], [string], "view">;
 
   removeAllLiquidity: TypedContractMethod<
-    [max_exchange_rate: BigNumberish, min_exchange_rate: BigNumberish],
+    [maxExchangeRate: BigNumberish, minExchangeRate: BigNumberish],
     [void],
     "payable"
   >;
@@ -206,8 +299,8 @@ export interface BBExchange extends BaseContract {
   removeLiquidity: TypedContractMethod<
     [
       amountETH: BigNumberish,
-      max_exchange_rate: BigNumberish,
-      min_exchange_rate: BigNumberish
+      maxExchangeRate: BigNumberish,
+      minExchangeRate: BigNumberish
     ],
     [void],
     "payable"
@@ -215,19 +308,19 @@ export interface BBExchange extends BaseContract {
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
-  swapETHForTokens: TypedContractMethod<
-    [max_exchange_rate: BigNumberish],
-    [void],
-    "payable"
-  >;
+  swapETHForTokens: TypedContractMethod<[], [void], "payable">;
 
   swapTokensForETH: TypedContractMethod<
-    [amountTokens: BigNumberish, max_exchange_rate: BigNumberish],
+    [tokenAmount: BigNumberish],
     [void],
-    "payable"
+    "nonpayable"
   >;
 
   token: TypedContractMethod<[], [string], "view">;
+
+  tokenReserves: TypedContractMethod<[], [bigint], "view">;
+
+  totalLiquidity: TypedContractMethod<[], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -235,14 +328,26 @@ export interface BBExchange extends BaseContract {
     "nonpayable"
   >;
 
+  weiReserves: TypedContractMethod<[], [bigint], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
+    nameOrSignature: "EXCHANGE_NAME"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "MIN_LIQUIDITY"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "addLiquidity"
   ): TypedContractMethod<
-    [max_exchange_rate: BigNumberish, min_exchange_rate: BigNumberish],
+    [
+      minWeiAmount: BigNumberish,
+      tokenAmount: BigNumberish,
+      minTokenAmount: BigNumberish
+    ],
     [void],
     "payable"
   >;
@@ -250,18 +355,36 @@ export interface BBExchange extends BaseContract {
     nameOrSignature: "createPool"
   ): TypedContractMethod<[amountTokens: BigNumberish], [void], "payable">;
   getFunction(
-    nameOrSignature: "exchange_name"
-  ): TypedContractMethod<[], [string], "view">;
-  getFunction(
     nameOrSignature: "getSwapFee"
   ): TypedContractMethod<[], [[bigint, bigint]], "view">;
+  getFunction(
+    nameOrSignature: "getTokenAmount"
+  ): TypedContractMethod<
+    [weiAmount: BigNumberish],
+    [[bigint, bigint] & { tokenAmount: bigint; withFee: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getWeiAmount"
+  ): TypedContractMethod<
+    [tokenAmount: BigNumberish],
+    [[bigint, bigint] & { weiAmount: bigint; withFee: bigint }],
+    "view"
+  >;
+  getFunction(nameOrSignature: "k"): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "lpAt"
+  ): TypedContractMethod<[index: BigNumberish], [string], "view">;
+  getFunction(
+    nameOrSignature: "lpLiquidity"
+  ): TypedContractMethod<[lp: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "removeAllLiquidity"
   ): TypedContractMethod<
-    [max_exchange_rate: BigNumberish, min_exchange_rate: BigNumberish],
+    [maxExchangeRate: BigNumberish, minExchangeRate: BigNumberish],
     [void],
     "payable"
   >;
@@ -270,8 +393,8 @@ export interface BBExchange extends BaseContract {
   ): TypedContractMethod<
     [
       amountETH: BigNumberish,
-      max_exchange_rate: BigNumberish,
-      min_exchange_rate: BigNumberish
+      maxExchangeRate: BigNumberish,
+      minExchangeRate: BigNumberish
     ],
     [void],
     "payable"
@@ -281,20 +404,25 @@ export interface BBExchange extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "swapETHForTokens"
-  ): TypedContractMethod<[max_exchange_rate: BigNumberish], [void], "payable">;
+  ): TypedContractMethod<[], [void], "payable">;
   getFunction(
     nameOrSignature: "swapTokensForETH"
-  ): TypedContractMethod<
-    [amountTokens: BigNumberish, max_exchange_rate: BigNumberish],
-    [void],
-    "payable"
-  >;
+  ): TypedContractMethod<[tokenAmount: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "token"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "tokenReserves"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalLiquidity"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "weiReserves"
+  ): TypedContractMethod<[], [bigint], "view">;
 
   getEvent(
     key: "OwnershipTransferred"

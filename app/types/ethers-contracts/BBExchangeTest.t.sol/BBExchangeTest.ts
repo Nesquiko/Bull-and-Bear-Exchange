@@ -46,6 +46,7 @@ export interface BBExchangeTestInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "IS_TEST"
+      | "createAllowance"
       | "excludeArtifacts"
       | "excludeContracts"
       | "excludeSenders"
@@ -57,7 +58,42 @@ export interface BBExchangeTestInterface extends Interface {
       | "targetInterfaces"
       | "targetSelectors"
       | "targetSenders"
+      | "testAddLiquidityInsufficientTokenBalance"
+      | "testAddLiquidityMinTokenAmountBellowAmount"
+      | "testAddLiquidityMinWeiAmountBellowAmount"
+      | "testAddLiquidityNoEth"
+      | "testAddLiquidityNoTokens"
+      | "testAddLiquidityTokenAppreciatedProvideLiquidity"
+      | "testAddLiquidityTokenQuoteBellowMin"
+      | "testAddLiquidityTokenTransferNotAllowed"
+      | "testAddLiquidityWeiAppreciatedCorrectLiquidityAdded"
+      | "testAddLiquidityWeiAppreciatedProvideLiquidity"
+      | "testAddLiquidityWeiQuoteBellowMin"
+      | "testCreatePoolAddLiquidityToCreator"
+      | "testCreatePoolEthReservesCorrectlySet"
+      | "testCreatePoolKCorrectlySet"
+      | "testCreatePoolNoEthProvided"
+      | "testCreatePoolProvideMoreTokensThanBalanceAllows"
+      | "testCreatePoolProvideNoTokens"
+      | "testCreatePoolTokenReservesCorrectlySet"
       | "testExample"
+      | "testGetTokenAmountCorrect"
+      | "testGetTokenAmountPoolNotInitialized"
+      | "testGetTokenAmountZeroWeiAmount"
+      | "testGetWeiAmountCorrect"
+      | "testGetWeiAmountPoolNotInitialized"
+      | "testGetWeiAmountZeroTokenAmount"
+      | "testSwapETHForTokensNoETH"
+      | "testSwapETHForTokensNotEnoughLiquidity"
+      | "testSwapETHForTokensTransferTokens"
+      | "testSwapETHForTokensUpdateReserves"
+      | "testSwapTokensForETHNoTokens"
+      | "testSwapTokensForETHNotEnoughLiquidity"
+      | "testSwapTokensForETHProvidedMoreTokensThanAllowed"
+      | "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows"
+      | "testSwapTokensForETHTransferEth"
+      | "testSwapTokensForETHTransferTokens"
+      | "testSwapTokensForETHUpdateReserves"
   ): FunctionFragment;
 
   getEvent(
@@ -87,6 +123,10 @@ export interface BBExchangeTestInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "IS_TEST", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "createAllowance",
+    values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "excludeArtifacts",
     values?: undefined
@@ -126,11 +166,155 @@ export interface BBExchangeTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "testAddLiquidityInsufficientTokenBalance",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityMinTokenAmountBellowAmount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityMinWeiAmountBellowAmount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityNoEth",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityNoTokens",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityTokenAppreciatedProvideLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityTokenQuoteBellowMin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityTokenTransferNotAllowed",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityWeiAppreciatedCorrectLiquidityAdded",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityWeiAppreciatedProvideLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testAddLiquidityWeiQuoteBellowMin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolAddLiquidityToCreator",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolEthReservesCorrectlySet",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolKCorrectlySet",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolNoEthProvided",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolProvideMoreTokensThanBalanceAllows",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolProvideNoTokens",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testCreatePoolTokenReservesCorrectlySet",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "testExample",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetTokenAmountCorrect",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetTokenAmountPoolNotInitialized",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetTokenAmountZeroWeiAmount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetWeiAmountCorrect",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetWeiAmountPoolNotInitialized",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testGetWeiAmountZeroTokenAmount",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapETHForTokensNoETH",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapETHForTokensNotEnoughLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapETHForTokensTransferTokens",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapETHForTokensUpdateReserves",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHNoTokens",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHNotEnoughLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHProvidedMoreTokensThanAllowed",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHTransferEth",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHTransferTokens",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testSwapTokensForETHUpdateReserves",
     values?: undefined
   ): string;
 
   decodeFunctionResult(functionFragment: "IS_TEST", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "createAllowance",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "excludeArtifacts",
     data: BytesLike
@@ -170,7 +354,147 @@ export interface BBExchangeTestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "testAddLiquidityInsufficientTokenBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityMinTokenAmountBellowAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityMinWeiAmountBellowAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityNoEth",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityNoTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityTokenAppreciatedProvideLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityTokenQuoteBellowMin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityTokenTransferNotAllowed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityWeiAppreciatedCorrectLiquidityAdded",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityWeiAppreciatedProvideLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testAddLiquidityWeiQuoteBellowMin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolAddLiquidityToCreator",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolEthReservesCorrectlySet",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolKCorrectlySet",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolNoEthProvided",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolProvideMoreTokensThanBalanceAllows",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolProvideNoTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testCreatePoolTokenReservesCorrectlySet",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "testExample",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetTokenAmountCorrect",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetTokenAmountPoolNotInitialized",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetTokenAmountZeroWeiAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetWeiAmountCorrect",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetWeiAmountPoolNotInitialized",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testGetWeiAmountZeroTokenAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapETHForTokensNoETH",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapETHForTokensNotEnoughLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapETHForTokensTransferTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapETHForTokensUpdateReserves",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHNoTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHNotEnoughLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHProvidedMoreTokensThanAllowed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHTransferEth",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHTransferTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHUpdateReserves",
     data: BytesLike
   ): Result;
 }
@@ -505,6 +829,12 @@ export interface BBExchangeTest extends BaseContract {
 
   IS_TEST: TypedContractMethod<[], [boolean], "view">;
 
+  createAllowance: TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   excludeArtifacts: TypedContractMethod<[], [string[]], "view">;
 
   excludeContracts: TypedContractMethod<[], [string[]], "view">;
@@ -539,7 +869,181 @@ export interface BBExchangeTest extends BaseContract {
 
   targetSenders: TypedContractMethod<[], [string[]], "view">;
 
+  testAddLiquidityInsufficientTokenBalance: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityMinTokenAmountBellowAmount: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityMinWeiAmountBellowAmount: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityNoEth: TypedContractMethod<[], [void], "nonpayable">;
+
+  testAddLiquidityNoTokens: TypedContractMethod<[], [void], "nonpayable">;
+
+  testAddLiquidityTokenAppreciatedProvideLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityTokenQuoteBellowMin: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityTokenTransferNotAllowed: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityWeiAppreciatedCorrectLiquidityAdded: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityWeiAppreciatedProvideLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testAddLiquidityWeiQuoteBellowMin: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testCreatePoolAddLiquidityToCreator: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testCreatePoolEthReservesCorrectlySet: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testCreatePoolKCorrectlySet: TypedContractMethod<[], [void], "nonpayable">;
+
+  testCreatePoolNoEthProvided: TypedContractMethod<[], [void], "nonpayable">;
+
+  testCreatePoolProvideMoreTokensThanBalanceAllows: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testCreatePoolProvideNoTokens: TypedContractMethod<[], [void], "nonpayable">;
+
+  testCreatePoolTokenReservesCorrectlySet: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   testExample: TypedContractMethod<[], [void], "nonpayable">;
+
+  testGetTokenAmountCorrect: TypedContractMethod<[], [void], "nonpayable">;
+
+  testGetTokenAmountPoolNotInitialized: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testGetTokenAmountZeroWeiAmount: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testGetWeiAmountCorrect: TypedContractMethod<[], [void], "nonpayable">;
+
+  testGetWeiAmountPoolNotInitialized: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testGetWeiAmountZeroTokenAmount: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapETHForTokensNoETH: TypedContractMethod<[], [void], "nonpayable">;
+
+  testSwapETHForTokensNotEnoughLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapETHForTokensTransferTokens: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapETHForTokensUpdateReserves: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHNoTokens: TypedContractMethod<[], [void], "nonpayable">;
+
+  testSwapTokensForETHNotEnoughLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHProvidedMoreTokensThanAllowed: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHProvidedMoreTokensThanBalanceAllows: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHTransferEth: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHTransferTokens: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testSwapTokensForETHUpdateReserves: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
@@ -548,6 +1052,13 @@ export interface BBExchangeTest extends BaseContract {
   getFunction(
     nameOrSignature: "IS_TEST"
   ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "createAllowance"
+  ): TypedContractMethod<
+    [owner: AddressLike, spender: AddressLike, amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "excludeArtifacts"
   ): TypedContractMethod<[], [string[]], "view">;
@@ -586,7 +1097,112 @@ export interface BBExchangeTest extends BaseContract {
     nameOrSignature: "targetSenders"
   ): TypedContractMethod<[], [string[]], "view">;
   getFunction(
+    nameOrSignature: "testAddLiquidityInsufficientTokenBalance"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityMinTokenAmountBellowAmount"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityMinWeiAmountBellowAmount"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityNoEth"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityNoTokens"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityTokenAppreciatedProvideLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityTokenQuoteBellowMin"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityTokenTransferNotAllowed"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityWeiAppreciatedCorrectLiquidityAdded"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityWeiAppreciatedProvideLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testAddLiquidityWeiQuoteBellowMin"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolAddLiquidityToCreator"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolEthReservesCorrectlySet"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolKCorrectlySet"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolNoEthProvided"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolProvideMoreTokensThanBalanceAllows"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolProvideNoTokens"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testCreatePoolTokenReservesCorrectlySet"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "testExample"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetTokenAmountCorrect"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetTokenAmountPoolNotInitialized"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetTokenAmountZeroWeiAmount"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetWeiAmountCorrect"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetWeiAmountPoolNotInitialized"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testGetWeiAmountZeroTokenAmount"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapETHForTokensNoETH"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapETHForTokensNotEnoughLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapETHForTokensTransferTokens"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapETHForTokensUpdateReserves"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHNoTokens"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHNotEnoughLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHProvidedMoreTokensThanAllowed"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHTransferEth"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHTransferTokens"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHUpdateReserves"
   ): TypedContractMethod<[], [void], "nonpayable">;
 
   getEvent(

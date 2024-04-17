@@ -3,10 +3,12 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BigNumberish,
   BytesLike,
   FunctionFragment,
   Result,
   Interface,
+  AddressLike,
   ContractRunner,
   ContractMethod,
   Listener,
@@ -20,12 +22,43 @@ import type {
 } from "../common";
 
 export interface DeployContractsInterface extends Interface {
-  getFunction(nameOrSignature: "IS_SCRIPT" | "run"): FunctionFragment;
+  getFunction(
+    nameOrSignature:
+      | "IS_SCRIPT"
+      | "deployContracts"
+      | "deployExchange"
+      | "deployToken"
+      | "run"
+  ): FunctionFragment;
 
   encodeFunctionData(functionFragment: "IS_SCRIPT", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "deployContracts",
+    values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deployExchange",
+    values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deployToken",
+    values: [BigNumberish, AddressLike]
+  ): string;
   encodeFunctionData(functionFragment: "run", values?: undefined): string;
 
   decodeFunctionResult(functionFragment: "IS_SCRIPT", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "deployContracts",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "deployExchange",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "deployToken",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "run", data: BytesLike): Result;
 }
 
@@ -74,6 +107,24 @@ export interface DeployContracts extends BaseContract {
 
   IS_SCRIPT: TypedContractMethod<[], [boolean], "view">;
 
+  deployContracts: TypedContractMethod<
+    [deployer: AddressLike, tokenSupply: BigNumberish],
+    [[string, string] & { token: string; exchange: string }],
+    "nonpayable"
+  >;
+
+  deployExchange: TypedContractMethod<
+    [token: AddressLike, deployer: AddressLike],
+    [string],
+    "nonpayable"
+  >;
+
+  deployToken: TypedContractMethod<
+    [supply: BigNumberish, deployer: AddressLike],
+    [string],
+    "nonpayable"
+  >;
+
   run: TypedContractMethod<
     [],
     [
@@ -93,6 +144,27 @@ export interface DeployContracts extends BaseContract {
   getFunction(
     nameOrSignature: "IS_SCRIPT"
   ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "deployContracts"
+  ): TypedContractMethod<
+    [deployer: AddressLike, tokenSupply: BigNumberish],
+    [[string, string] & { token: string; exchange: string }],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deployExchange"
+  ): TypedContractMethod<
+    [token: AddressLike, deployer: AddressLike],
+    [string],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "deployToken"
+  ): TypedContractMethod<
+    [supply: BigNumberish, deployer: AddressLike],
+    [string],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "run"
   ): TypedContractMethod<

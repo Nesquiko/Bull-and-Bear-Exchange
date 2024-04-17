@@ -46,7 +46,7 @@
             <label for="max-slippage-liquid">Maximum Slippage Percentage:</label>
             <input id="max-slippage-liquid" type="text" v-model="maxSlippageLiquid"/>
             <div>
-              <button @click="addLiquidity">Add Liquidity</button>
+              <button @click="addLiquidity(selectedAccount.address)">Add Liquidity</button>
               <button @click="removeLiquidity">Remove Liquidity</button>
               <button @click="removeAllLiquidity">Remove All Liquidity</button>
             </div>
@@ -109,8 +109,9 @@ if (poolState.tokenLiquidity === 0
   // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).mint(total_supply / 2);
   // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).disable_mint();
   // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).approve(exchangeAddress, total_supply);
+  // tokenContract.connect(await provider.getSigner(selectedAccount.value.address))
   // // initialize pool with equal amounts of ETH and tokens, so exchange rate begins as 1:1
-  // await exchangeContract.connect(await provider.getSigner(selectedAccount.value.address)).createPool(5000, {value: ethers.parseUnits("5000", "wei")});
+  await exchangeContract.connect(await provider.getSigner(selectedAccount.value.address)).createPool(5000, {value: ethers.parseUnits("5000", "wei")});
 }
 console.log("init finished");
 

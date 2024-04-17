@@ -1,14 +1,19 @@
 import {ref} from "vue";
+import {exchangeAddress, exchangeContract, provider, tokenContract} from "@/constants";
 
 export const useLiquidity = () => {
   const amtEth = ref('');
   const maxSlippageLiquid = ref('');
 
-  const addLiquidity = () => {
+  const addLiquidity = async (selectedAccount: string) => {
     console.log('add liquidity');
-
-    amtEth.value = '';
-    maxSlippageLiquid.value = '';
+    try {
+      const liquidityTokens = await exchangeContract.connect(await provider.getSigner(selectedAccount.address)).addLiquidity(tokenContract.address, amtEth.value, maxSlippageLiquid.value);
+      amtEth.value = '';
+      maxSlippageLiquid.value = '';
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   const removeLiquidity = () => {
