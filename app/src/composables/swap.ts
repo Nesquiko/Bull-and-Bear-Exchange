@@ -1,23 +1,38 @@
-import {ref} from "vue";
+import type { BBExchange } from 'types/ethers-contracts';
+import { ref } from 'vue';
+import { ethers } from 'ethers';
 
-export const useSwap = () => {
-  const amtToSwap = ref('');
-  const maxSlippageSwap = ref('');
-  const swapEth = () => {
-    console.log('swap eth');
+export const useSwap = (exchangeContract: BBExchange) => {
+  const amtToSwap = ref<number | undefined>(undefined);
+  const maxSlippageSwap = ref<number | undefined>(undefined);
 
-    console.log(amtToSwap.value)
+  const swapEth = async (
+    tokenEthRate: number,
+    signer: ethers.ContractRunner
+  ) => {
+    if (!amtToSwap.value || !maxSlippageSwap.value) return;
 
-    amtToSwap.value = '';
-    maxSlippageSwap.value = '';
-  }
+    const options = {
+      value: ethers.parseUnits(amtToSwap.value.toString(), 'wei'),
+    };
+    const withSlippage = Math.floor(
+      (1 - maxSlippageSwap.value / 100) * amtToSwap.value * tokenEthRate
+    );
+
+    await exchangeContract
+      .connect(signer)
+      .swapETHForTokens(withSlippage, options);
+
+    amtToSwap.value = undefined;
+    maxSlippageSwap.value = undefined;
+  };
 
   const swapToken = () => {
     console.log('swap token');
 
-    amtToSwap.value = '';
-    maxSlippageSwap.value = '';
-  }
+    amtToSwap.value = undefined;
+    maxSlippageSwap.value = undefined;
+  };
 
-  return {amtToSwap, maxSlippageSwap, swapEth, swapToken}
-}
+  return { amtToSwap, maxSlippageSwap, swapEth, swapToken };
+};

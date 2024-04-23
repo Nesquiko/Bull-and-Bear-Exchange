@@ -1,10 +1,13 @@
 <template>
   <Suspense>
     <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl py-4 sm:py-6 lg:py-8">
+      <header>
+        <h1>{{ exchangeName }}</h1>
+      </header>
       <div
         class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
       >
-        <h5>My Account</h5>
+        <h5>My Account with balance: ???</h5>
         <div>
           <select aria-label="Select account" v-model="selectedAccount">
             <option v-for="(account, i) in accounts" :key="i" :value="account">
@@ -13,15 +16,51 @@
           </select>
         </div>
       </div>
-      <header>
-        <div>
-          <h1>{{ exchangeName }}</h1>
-          <h2>Decentralized Cryptocurrency Exchange</h2>
-        </div>
-      </header>
       <div>
         <div>
           <article>
+            <div>
+              <div
+                class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
+              >
+                <h2>Swap</h2>
+                <div class="grid grid-cols-3 text-center gap-4">
+                  <p>1 {{ tokenSymbol }} = {{ poolState.ethTokenRate }} Wei</p>
+                  <p>Swap Fee {{ poolState.fee }}%</p>
+                  <p>
+                    Liquidity {{ poolState.tokenLiquidity }} {{ tokenSymbol }} :
+                    {{ poolState.ethLiquidity }} Wei
+                  </p>
+                </div>
+                <label for="amt-to-swap">Amount:</label>
+                <input
+                  class="w-full mt-2 mb-4 rounded-lg border-1 border-gray-300 bg-gray-50"
+                  id="amt-to-swap"
+                  type="number"
+                  v-model="amtToSwap"
+                />
+                <label for="max-slippage-swap"
+                  >Maximum Slippage Percentage:</label
+                >
+                <input
+                  class="w-full mt-2 mb-4 rounded-lg border-1 border-gray-300 bg-gray-50"
+                  id="max-slippage-swap"
+                  type="number"
+                  max="100"
+                  min="0"
+                  v-model="maxSlippageSwap"
+                />
+                <div>
+                  <button @click="swapWeiForTokens">
+                    Swap ETH for {{ tokenSymbol }}
+                  </button>
+                  <button @click="swapToken">
+                    Swap {{ tokenSymbol }} for ETH
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div>
               <h1>Current rate:</h1>
               <h3>
@@ -33,26 +72,7 @@
             <div>
               <h1>Current Liquidity:</h1>
               <h3>{{ poolState.tokenLiquidity }} {{ tokenSymbol }}</h3>
-              <h3>{{ poolState.ethLiquidity }} ETH</h3>
-            </div>
-            <div>
-              <h4>Swap Currencies:</h4>
-              <label for="amt-to-swap">Amount:</label>
-              <input id="amt-to-swap" type="text" v-model="amtToSwap" />
-              <label for="max-slippage-swap"
-                >Maximum Slippage Percentage:</label
-              >
-              <input
-                id="max-slippage-swap"
-                type="text"
-                v-model="maxSlippageSwap"
-              />
-              <div>
-                <button @click="swapEth">Swap ETH for {{ tokenSymbol }}</button>
-                <button @click="swapToken">
-                  Swap {{ tokenSymbol }} for ETH
-                </button>
-              </div>
+              <h3>{{ poolState.ethLiquidity }} Wei</h3>
             </div>
             <div>
               <h4>Adjust Liquidity:</h4>
@@ -91,15 +111,14 @@ import { useLiquidity } from '@/composables/liquidity';
 import {
   exchangeName,
   tokenSymbol,
-  tokenAddress,
-  tokenAbi,
   exchangeAddress,
-  exchangeAbi,
   provider,
   tokenContract,
   exchangeContract,
 } from '@/constants';
 import { ethers } from 'ethers';
+
+const TOTAL_SUPPLY = 5000n;
 
 const accounts = await provider.listAccounts();
 
@@ -111,7 +130,8 @@ const ethTokenRate = ref(0);
 const tokenLiquidity = ref(0);
 const ethLiquidity = ref(0);
 
-const { amtToSwap, maxSlippageSwap, swapEth, swapToken } = useSwap();
+const { amtToSwap, maxSlippageSwap, swapEth, swapToken } =
+  useSwap(exchangeContract);
 const {
   amtEth,
   maxSlippageLiquid,
@@ -120,37 +140,49 @@ const {
   removeAllLiquidity,
 } = useLiquidity();
 
+const swapWeiForTokens = async () => {
+  await swapEth(poolState.value.tokenEthRate, accounts[9]); // TODO use selectedAccount
+  poolState.value = await getPoolState();
+};
+
 const getPoolState = async () => {
   const liquidityTokens = await tokenContract.balanceOf(exchangeAddress);
   const liquidityEth = await provider.getBalance(exchangeAddress);
-  return calculatePoolState(liquidityTokens, liquidityEth);
+  const [feeNum, feeDenom] = await exchangeContract.getSwapFee();
+  const fee = Number(feeNum) / Number(feeDenom);
+  return calculatePoolState(liquidityTokens, liquidityEth, fee);
 };
 
-const calculatePoolState = (liquidityTokens: bigint, liquidityEth: bigint) => {
+const calculatePoolState = (
+  liquidityTokens: bigint,
+  liquidityEth: bigint,
+  fee: number
+) => {
   return {
     tokenLiquidity: Number(liquidityTokens),
     ethLiquidity: Number(liquidityEth),
     tokenEthRate: Number(liquidityTokens) / Number(liquidityEth) || 0,
     ethTokenRate: Number(liquidityEth) / Number(liquidityTokens) || 0,
+    fee,
   };
 };
 
-let poolState = await getPoolState();
-if (poolState.tokenLiquidity === 0 && poolState.ethLiquidity === 0) {
+let poolState = ref(await getPoolState());
+if (
+  poolState.value.tokenLiquidity === 0 &&
+  poolState.value.ethLiquidity === 0
+) {
   console.log('starting init');
-  // Call mint twice to make sure mint can be called mutliple times prior to disable_mint
-  const totalSupply = 5000n;
-  // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).mint(total_supply / 2);
-  // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).mint(total_supply / 2);
-  // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).disable_mint();
-  // await tokenContract.connect(await provider.getSigner(selectedAccount.value.address)).approve(exchangeAddress, total_supply);
-  // tokenContract.connect(await provider.getSigner(selectedAccount.value.address))
-  // // initialize pool with equal amounts of ETH and tokens, so exchange rate begins as 1:1
+  // initialize pool with equal amounts of ETH and tokens, so exchange rate begins as 1:1
   const owner = accounts[0];
-  await tokenContract.connect(owner).approve(exchangeAddress, totalSupply);
+  await tokenContract.connect(owner).approve(exchangeAddress, TOTAL_SUPPLY);
   const options = { value: ethers.parseUnits('5000', 'wei') };
-  await exchangeContract.connect(owner).createPool(totalSupply, options);
-  poolState = calculatePoolState(totalSupply, totalSupply);
+  await exchangeContract.connect(owner).createPool(TOTAL_SUPPLY, options);
+  poolState.value = calculatePoolState(
+    TOTAL_SUPPLY,
+    TOTAL_SUPPLY,
+    poolState.value.fee
+  );
   console.log('init finished');
 }
 </script>

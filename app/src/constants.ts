@@ -4,8 +4,8 @@ import {
   BBToken__factory,
 } from '../types/ethers-contracts';
 
-export const tokenSymbol = 'BB';
-export const exchangeName = 'Bull and Bear Token';
+export const tokenSymbol = 'BBT';
+export const exchangeName = 'Bull and Bear Exchange';
 
 export const tokenAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 export const tokenAbi = [
@@ -591,7 +591,13 @@ export const exchangeAbi = [
   {
     type: 'function',
     name: 'swapETHForTokens',
-    inputs: [],
+    inputs: [
+      {
+        name: 'minTokenAmount',
+        type: 'uint256',
+        internalType: 'uint256',
+      },
+    ],
     outputs: [],
     stateMutability: 'payable',
   },
