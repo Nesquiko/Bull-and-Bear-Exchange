@@ -179,12 +179,14 @@ contract BBExchange is Ownable {
 
     /// @notice Swaps eth for tokens
     /// @dev msg.value is how many wei the sender is swapping
-    function swapETHForTokens() external payable {
+    /// @param minTokenAmount value with applied slippage
+    function swapETHForTokens(uint256 minTokenAmount) external payable {
         uint256 ethAmount = msg.value;
         require(ethAmount > 0, "Need ETH to swap");
 
         (uint256 tokenAmount, uint256 withFee) = getTokenAmount(ethAmount);
         require(tokenReserves - tokenAmount > MIN_LIQUIDITY, "Not enough liquidity");
+        require(withFee >= minTokenAmount, "Too much slippage");
 
         weiReserves += ethAmount;
         tokenReserves -= withFee;
