@@ -104,7 +104,7 @@ export interface BBExchangeInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "swapTokensForETH",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "token", values?: undefined): string;
   encodeFunctionData(
@@ -315,7 +315,7 @@ export interface BBExchange extends BaseContract {
   >;
 
   swapTokensForETH: TypedContractMethod<
-    [tokenAmount: BigNumberish],
+    [tokenAmount: BigNumberish, minWeiAmount: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -411,7 +411,11 @@ export interface BBExchange extends BaseContract {
   ): TypedContractMethod<[minTokenAmount: BigNumberish], [void], "payable">;
   getFunction(
     nameOrSignature: "swapTokensForETH"
-  ): TypedContractMethod<[tokenAmount: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<
+    [tokenAmount: BigNumberish, minWeiAmount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "token"
   ): TypedContractMethod<[], [string], "view">;

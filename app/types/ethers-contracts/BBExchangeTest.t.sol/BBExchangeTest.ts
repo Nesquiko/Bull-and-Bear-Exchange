@@ -92,6 +92,7 @@ export interface BBExchangeTestInterface extends Interface {
       | "testSwapTokensForETHNotEnoughLiquidity"
       | "testSwapTokensForETHProvidedMoreTokensThanAllowed"
       | "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows"
+      | "testSwapTokensForETHTooMuchSlippage"
       | "testSwapTokensForETHTransferEth"
       | "testSwapTokensForETHTransferTokens"
       | "testSwapTokensForETHUpdateReserves"
@@ -303,6 +304,10 @@ export interface BBExchangeTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "testSwapTokensForETHTooMuchSlippage",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "testSwapTokensForETHTransferEth",
     values?: undefined
   ): string;
@@ -492,6 +497,10 @@ export interface BBExchangeTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testSwapTokensForETHTooMuchSlippage",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1042,6 +1051,12 @@ export interface BBExchangeTest extends BaseContract {
     "nonpayable"
   >;
 
+  testSwapTokensForETHTooMuchSlippage: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   testSwapTokensForETHTransferEth: TypedContractMethod<
     [],
     [void],
@@ -1212,6 +1227,9 @@ export interface BBExchangeTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "testSwapTokensForETHProvidedMoreTokensThanBalanceAllows"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testSwapTokensForETHTooMuchSlippage"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "testSwapTokensForETHTransferEth"

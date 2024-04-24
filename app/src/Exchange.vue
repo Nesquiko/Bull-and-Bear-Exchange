@@ -58,7 +58,7 @@
                   <button @click="swapWeiForTokens">
                     Swap ETH for {{ tokenSymbol }}
                   </button>
-                  <button @click="swapToken">
+                  <button @click="swapTokenForWei">
                     Swap {{ tokenSymbol }} for ETH
                   </button>
                 </div>
@@ -140,6 +140,12 @@ const {
 
 const swapWeiForTokens = async () => {
   await swapEth(poolState.value.tokenEthRate, toRaw(selectedAccount.value));
+  poolState.value = await getPoolState();
+  updateBalances();
+};
+
+const swapTokenForWei = async () => {
+  await swapToken(poolState.value.ethTokenRate, toRaw(selectedAccount.value));
   poolState.value = await getPoolState();
   updateBalances();
 };
