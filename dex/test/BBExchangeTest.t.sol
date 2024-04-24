@@ -36,10 +36,10 @@ contract BBExchangeTest is Test {
         _;
     }
 
-    modifier swapTokensForEth(address _swapper, uint256 tokenAmount) {
+    modifier swapTokensForEth(address _swapper, uint256 tokenAmount, uint256 minAmount) {
         createAllowance(_swapper, address(exchange), tokenAmount);
         vm.prank(_swapper);
-        exchange.swapTokensForETH(tokenAmount);
+        exchange.swapTokensForETH(tokenAmount, minAmount);
         _;
     }
 
@@ -69,7 +69,7 @@ contract BBExchangeTest is Test {
     function testAddLiquidityWeiAppreciatedCorrectLiquidityAdded()
         public
         initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500)
+        swapTokensForEth(swapper, 500, 400)
     {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
         uint256 expectedLiquidity = 82 * exchange.totalLiquidity() / exchange.weiReserves();
@@ -86,7 +86,7 @@ contract BBExchangeTest is Test {
     function testAddLiquidityWeiAppreciatedProvideLiquidity()
         public
         initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500)
+        swapTokensForEth(swapper, 500, 400)
     {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
         vm.prank(lp2);
@@ -128,7 +128,7 @@ contract BBExchangeTest is Test {
     function testAddLiquidityWeiQuoteBellowMin()
         public
         initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500)
+        swapTokensForEth(swapper, 500, 400)
     {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
         vm.expectRevert(bytes("wei quote bellow min"));
@@ -229,7 +229,7 @@ contract BBExchangeTest is Test {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
-        exchange.swapTokensForETH(swapAmount);
+        exchange.swapTokensForETH(swapAmount, 95);
 
         assertEq(swapper.balance, SWAPPERS_WEI_BALANCE + 95);
     }
@@ -238,7 +238,7 @@ contract BBExchangeTest is Test {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
-        exchange.swapTokensForETH(swapAmount);
+        exchange.swapTokensForETH(swapAmount, 95);
 
         uint256 expectedTokenReserves = LP_TOKEN_BALANCE + swapAmount;
         uint256 expectedWeiReserves = LP_TOKEN_BALANCE - 95;
@@ -251,23 +251,31 @@ contract BBExchangeTest is Test {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
-        exchange.swapTokensForETH(swapAmount);
+        exchange.swapTokensForETH(swapAmount, 95);
 
         assertEq(SWAPPERS_TOKEN_BALANCE - swapAmount, token.balanceOf(swapper));
         assertEq(LP_TOKEN_BALANCE + swapAmount, token.balanceOf(address(exchange)));
+    }
+
+    function testSwapTokensForETHTooMuchSlippage() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+        createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
+        uint256 swapAmount = 100;
+        vm.prank(swapper);
+        vm.expectRevert(bytes("Too much slippage"));
+        exchange.swapTokensForETH(swapAmount, 96);
     }
 
     function testSwapTokensForETHNotEnoughLiquidity() public initializedExchange(2, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         vm.expectRevert(bytes("Not enough liquidity"));
         vm.prank(swapper);
-        exchange.swapTokensForETH(2);
+        exchange.swapTokensForETH(2, 0);
     }
 
     function testSwapTokensForETHProvidedMoreTokensThanAllowed() public initializedExchange(LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Not enough token allowed for transfer"));
         vm.prank(swapper);
-        exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE);
+        exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE, 0);
     }
 
     function testSwapTokensForETHProvidedMoreTokensThanBalanceAllows()
@@ -276,13 +284,13 @@ contract BBExchangeTest is Test {
     {
         vm.expectRevert(bytes("Not enough tokens"));
         vm.prank(swapper);
-        exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE + 1);
+        exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE + 1, 0);
     }
 
     function testSwapTokensForETHNoTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Need tokens to swap"));
         vm.prank(swapper);
-        exchange.swapTokensForETH(0);
+        exchange.swapTokensForETH(0, 0);
     }
 
     function testGetTokenAmountCorrect() public initializedExchange(LP_TOKEN_BALANCE, lp) {
