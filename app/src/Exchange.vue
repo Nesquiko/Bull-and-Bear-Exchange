@@ -7,13 +7,17 @@
       <div
         class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
       >
-        <h5>My Account with balance: ???</h5>
+        <h5>Current Account</h5>
         <div>
           <select aria-label="Select account" v-model="selectedAccount">
             <option v-for="(account, i) in accounts" :key="i" :value="account">
               {{ account.address }}
             </option>
           </select>
+        </div>
+        <div class="grid grid-cols-2 text-center">
+          <p class="text-xl">{{ weiBalance }} Wei</p>
+          <p class="text-xl">{{ tokenBalance }} {{ tokenSymbol }}</p>
         </div>
       </div>
       <div>
@@ -26,7 +30,7 @@
                 <h2>Swap</h2>
                 <div class="grid grid-cols-3 text-center gap-4">
                   <p>1 {{ tokenSymbol }} = {{ poolState.ethTokenRate }} Wei</p>
-                  <p>Swap Fee {{ poolState.fee }}%</p>
+                  <p>Swap Fee {{ poolState.fee * 100 }}%</p>
                   <p>
                     Liquidity {{ poolState.tokenLiquidity }} {{ tokenSymbol }} :
                     {{ poolState.ethLiquidity }} Wei
@@ -124,12 +128,6 @@ const accounts = await provider.listAccounts();
 
 const selectedAccount = ref(accounts[9]);
 
-const tokenEthRate = ref(0);
-const ethTokenRate = ref(0);
-
-const tokenLiquidity = ref(0);
-const ethLiquidity = ref(0);
-
 const { amtToSwap, maxSlippageSwap, swapEth, swapToken } =
   useSwap(exchangeContract);
 const {
@@ -140,14 +138,24 @@ const {
   removeAllLiquidity,
 } = useLiquidity();
 
-watch(selectedAccount, async () => {
-  //   TODO
-});
-
 const swapWeiForTokens = async () => {
   await swapEth(poolState.value.tokenEthRate, toRaw(selectedAccount.value));
   poolState.value = await getPoolState();
+  updateBalances();
 };
+
+const weiBalance = ref(0n);
+const tokenBalance = ref(0n);
+
+const updateBalances = async () => {
+  weiBalance.value = await provider.getBalance(selectedAccount.value.address);
+  tokenBalance.value = await tokenContract.balanceOf(
+    selectedAccount.value.address
+  );
+};
+updateBalances();
+
+watch(selectedAccount, updateBalances);
 
 const getPoolState = async () => {
   const liquidityTokens = await tokenContract.balanceOf(exchangeAddress);
