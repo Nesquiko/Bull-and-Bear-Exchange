@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, toRaw, watch } from 'vue';
 import { useSwap } from '@/composables/swap';
 import { useLiquidity } from '@/composables/liquidity';
 import {
@@ -140,8 +140,12 @@ const {
   removeAllLiquidity,
 } = useLiquidity();
 
+watch(selectedAccount, async () => {
+  //   TODO
+});
+
 const swapWeiForTokens = async () => {
-  await swapEth(poolState.value.tokenEthRate, accounts[9]); // TODO use selectedAccount
+  await swapEth(poolState.value.tokenEthRate, toRaw(selectedAccount.value));
   poolState.value = await getPoolState();
 };
 
