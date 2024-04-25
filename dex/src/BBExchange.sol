@@ -139,10 +139,38 @@ contract BBExchange is Ownable {
 
     // Function removeLiquidity: Removes liquidity given the desired amount of ETH to remove.
     // You can change the inputs, or the scope of your function, as needed.
-    function removeLiquidity(uint256 amountETH, uint256 maxExchangeRate, uint256 minExchangeRate) public payable {
-        /**
-         * TODO: Implement this function ******
-         */
+    function removeLiquidity(uint256 ethAmount) public payable {
+        require(ethAmount > 0, "Amount must be greater than zero");
+        uint256 liquidity = lps[msg.sender];
+        require(liquidity > 0, "No liquidity found for sender");
+        require(ethAmount <= liquidity, "Not enough liquidity");
+
+        // Calculate the total ETH contribution based on current liquidity and fees
+        uint256 weiFee = (ethAmount * swapFeeNumerator * weiReserves) / (totalLiquidity * swapFeeDenominator);
+        (uint256 tokenFees,) = getTokenAmount(weiFee);
+
+        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity) + weiFee;
+        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient liquidity");
+
+        (uint256 tokenContribution,) = getTokenAmount(ethAmount);
+
+        tokenContribution += tokenFees;
+
+        // Update reserves
+        weiReserves -= ethContribution;
+        tokenReserves -= tokenContribution;
+        k = weiReserves * tokenReserves;
+
+        // Update liquidity records
+        lps[msg.sender] -= ethAmount;
+        totalLiquidity -= ethAmount;
+
+        // Transfer ETH and tokens back to the liquidity provider
+        (bool ethSuccess,) = msg.sender.call{value: ethContribution}("");
+        require(ethSuccess, "Failed to send ETH");
+
+        bool tokenSuccess = token.transfer(msg.sender, tokenContribution);
+        require(tokenSuccess, "Failed to send tokens");
     }
 
     // Function removeAllLiquidity: Removes all liquidity that msg.sender is entitled to withdraw

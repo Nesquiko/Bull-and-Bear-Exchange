@@ -183,6 +183,21 @@ contract BBExchangeTest is Test {
         exchange.addLiquidity{value: 0}(0, 0, 0);
     }
 
+    function testRemoveLiquidityNoEth() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+        vm.expectRevert(bytes("Amount must be greater than zero"));
+        vm.prank(lp);
+        exchange.removeLiquidity(0);
+    }
+
+    function testRemoveLiquidityNotEnoughLiquidity() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+        vm.expectRevert(bytes("Not enough liquidity"));
+        vm.prank(lp);
+        exchange.removeLiquidity(1000000);
+    }
+
+//    TODO: No liquidity found for sender
+//    TODO: Insufficient liquidity
+
     function testSwapETHForTokensTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
