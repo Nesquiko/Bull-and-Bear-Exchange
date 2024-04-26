@@ -1,5 +1,6 @@
-import {ref} from "vue";
-import {exchangeAddress, exchangeContract, provider, tokenContract} from "@/constants";
+import { ref } from 'vue';
+import { exchangeContract, provider, tokenContract } from '@/constants';
+import { ethers, type JsonRpcSigner } from 'ethers';
 
 export const useLiquidity = () => {
   const amtEth = ref('');
@@ -8,25 +9,40 @@ export const useLiquidity = () => {
   const addLiquidity = async (selectedAccount: string) => {
     console.log('add liquidity');
     try {
-      const liquidityTokens = await exchangeContract.connect(await provider.getSigner(selectedAccount.address)).addLiquidity(tokenContract.address, amtEth.value, maxSlippageLiquid.value);
+      // TODO: connect to real data
+      await exchangeContract
+        .connect(await provider.getSigner(selectedAccount))
+        .addLiquidity(10, 1000, 10, { value: 10 });
       amtEth.value = '';
       maxSlippageLiquid.value = '';
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
-  }
+  };
 
-  const removeLiquidity = () => {
-    console.log('remove liquidity');
-
-    amtEth.value = '';
-    maxSlippageLiquid.value = '';
-  }
+  const removeLiquidity = async (selectedAccount: string) => {
+    console.log(selectedAccount);
+    try {
+      await exchangeContract
+        .connect(await provider.getSigner(selectedAccount))
+        .removeLiquidity(100);
+      amtEth.value = '';
+      maxSlippageLiquid.value = '';
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   const removeAllLiquidity = () => {
     console.log('remove all liquidity');
 
     maxSlippageLiquid.value = '';
-  }
-  return {amtEth, maxSlippageLiquid, addLiquidity, removeLiquidity, removeAllLiquidity}
-}
+  };
+  return {
+    amtEth,
+    maxSlippageLiquid,
+    addLiquidity,
+    removeLiquidity,
+    removeAllLiquidity,
+  };
+};

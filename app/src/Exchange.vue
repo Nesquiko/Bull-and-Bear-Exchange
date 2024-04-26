@@ -15,7 +15,7 @@
             </option>
           </select>
         </div>
-        <div class="grid grid-cols-2 text-center">
+        <div class="grid lg:grid-cols-2 text-center">
           <p class="text-xl">{{ weiBalance }} Wei</p>
           <p class="text-xl">{{ tokenBalance }} {{ tokenSymbol }}</p>
         </div>
@@ -28,7 +28,7 @@
                 class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
               >
                 <h2>Swap</h2>
-                <div class="grid grid-cols-3 text-center gap-4">
+                <div class="grid lg:grid-cols-3 text-center gap-4">
                   <p>1 {{ tokenSymbol }} = {{ poolState.ethTokenRate }} Wei</p>
                   <p>Swap Fee {{ poolState.fee * 100 }}%</p>
                   <p>
@@ -94,7 +94,9 @@
                 <button @click="addLiquidity(selectedAccount.address)">
                   Add Liquidity
                 </button>
-                <button @click="removeLiquidity">Remove Liquidity</button>
+                <button @click="removeLiquidity(selectedAccount.address)">
+                  Remove Liquidity
+                </button>
                 <button @click="removeAllLiquidity">
                   Remove All Liquidity
                 </button>
