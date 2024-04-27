@@ -139,21 +139,22 @@ contract BBExchange is Ownable {
 
     // Function removeLiquidity: Removes liquidity given the desired amount of ETH to remove.
     // You can change the inputs, or the scope of your function, as needed.
-    function removeLiquidity(uint256 ethAmount) public payable {
+    function removeLiquidity(uint256 ethAmount, uint256 minWeiAmount, uint256 minTokenAmount) public payable {
         require(ethAmount > 0, "Amount must be greater than zero");
         uint256 liquidity = lps[msg.sender];
         require(liquidity > 0, "No liquidity found for sender");
         require(ethAmount <= liquidity, "Not enough liquidity");
 
-        // Calculate the total ETH contribution based on current liquidity and fees
         uint256 weiFee = (ethAmount * swapFeeNumerator * weiReserves) / (totalLiquidity * swapFeeDenominator);
         (uint256 tokenFees,) = getTokenAmount(weiFee);
 
-        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity) + weiFee;
-        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient liquidity");
-
+        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity);
+        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient wei liquidity");
         (uint256 tokenContribution,) = getTokenAmount(ethAmount);
+        require(tokenContribution <= tokenReserves - MIN_LIQUIDITY, "Insufficient token liquidity");
+        require(ethContribution >= minWeiAmount && tokenContribution >= minTokenAmount, "Too much slipage");
 
+        ethContribution += weiFee;
         tokenContribution += tokenFees;
 
         // Update reserves
