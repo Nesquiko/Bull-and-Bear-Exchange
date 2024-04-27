@@ -6,4 +6,4 @@ build-latex:
 	bibtex $(BUILD_DIR)/doc.aux
 	pdflatex -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error -recorder -output-directory=$(BUILD_DIR) "doc.tex"
 	pdflatex -shell-escape -synctex=1 -interaction=nonstopmode -file-line-error -recorder -output-directory=$(BUILD_DIR) "doc.tex"
-	cp $(BUILD_DIR)/doc.pdf doc.pdf
+	cp $(BUILD_DIR)/doc.pdf ../doc.pdf
