@@ -11,6 +11,7 @@
 \usepackage{float}
 \usepackage{subfiles}
 \usepackage{lipsum}
+\usepackage[outputdir=build]{minted}
 
 \usepackage[colorlinks = true,
             linkcolor = blue,
@@ -80,6 +81,53 @@ for swapping Ether with our custom ERC20 token.
 \Que{What would one thing you would change}
 
 \section{Implementation}
+
+We decided to rewrite the provided Hardhat project into Foundry\cite{foundryBook}.
+Our decentralized exchange is called \textbf{Bull \& Bear Exchange} and the ERC20
+token traded on this exchange is \textbf{Bull \& Bear Token}. Also we rewrote
+provided web app into Vue\cite{vuejs}.
+
+The project structure looks like this:
+
+\begin{itemize}
+    \item \texttt{app} - contains the Vue frontend interacting with the smart contracts
+    \item \texttt{dex} - contains the Foundry project for the smart contracts of \textbf{Bull \& Bear Exchange}
+    \item \texttt{docs} - contains documentation for this assignment
+\end{itemize}
+
+\subsection*{Smart contracts}
+
+\subsubsection*{Bull \& Bear Token --- BBT}
+
+ERC20 token to be traded on our exchange is called \textbf{Bull \& Bear token},
+with symbol being \textbf{BBT}. We argue that the two functions from assignment
+(\texttt{mint} and \texttt{disable\_mint}), which we have to implement, are
+useless and potentially an anti-pattern. ERC20 implementation by
+OpenZeppelin is enough to implement a token with constant supply.
+By pre-minting supply to the deployer of the token, we achieved a token
+with constant supply (no new tokens can be minted as \texttt{\_mint} in ERC20
+is an internal function\cite{openzeppelinERC20}). Thus we have reduced the
+complexity of this token implementation by removing \texttt{mint}, \texttt{disable\_mint}
+and even the \texttt{Ownable} parent contract used in provided source code.
+
+Thus the whole contract has few lines and minimal complexity:
+
+\begin{minted}{solidity}
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract BBToken is ERC20 {
+    constructor(uint256 supply) ERC20("Bull and Bear Token", "BBT") {
+        _mint(msg.sender, supply * 10 ** decimals());
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 0;
+    }
+}
+\end{minted}
+
+The assignment requires that our token be indivisible, the function
+decimals is overridden to reflect this requirement.
 
 \section{Testing}
 
