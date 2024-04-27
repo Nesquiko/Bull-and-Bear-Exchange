@@ -1,10 +1,10 @@
 \documentclass[11pt,a4paper]{article}
 
 \usepackage[USenglish]{babel}
-\usepackage[IL2]{fontenc} 
+\usepackage[IL2]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-\usepackage{url} 
+\usepackage{url}
 \usepackage{cite}
 \usepackage{listings}
 \usepackage{color}
@@ -18,10 +18,23 @@
             citecolor = blue,
             anchorcolor = blue]{hyperref}
 
+\newcounter{question}
+\setcounter{question}{0}
+\newcommand\Que[1]{
+   \leavevmode\par
+   \stepcounter{question}
+   \noindent
+   \thequestion. #1\par}
+
+\newcommand\Ans[2][]{
+    \leavevmode\par\noindent
+   {\leftskip37pt
+    A --- \textbf{#1}#2\par}}
+
 \raggedbottom
-\oddsidemargin=0cm 
+\oddsidemargin=0cm
 \evensidemargin=0cm
-\textwidth=16.5cm 
+\textwidth=16.5cm
 \pagestyle{plain}
 
 \title{Bull and Bear Exchange\\
@@ -30,7 +43,7 @@
 \author{Lukáš Častven, Jakub Jelinek\\[2pt]
 	{\small Slovenská technická univerzita v Bratislave}\\
 	{\small Fakulta informatiky a informačných technológií}\\
-	{\small \texttt{xcastven@stuba.sk}}
+	{\small \texttt{xcastven@stuba.sk, xjelinek@stuba.sk}}
 }
 
 \date{\today}
@@ -42,11 +55,37 @@
 \tableofcontents
 \pagebreak
 
-\section{Introduction}
+\section{Assignment}
 
-aaa\cite{uniswapDocs}
-\lipsum[2-15]
+Main goal of this assignment was to complete provided implementation of an
+Uniswap\cite{uniswapDocs} inspired decentralized exchange. We were given
+solidity and javascript source codes in a Hardhat project, and we had to
+implement methods in these files to create a functional decentralized exchange
+for swapping Ether with our custom ERC20 token.
 
+\section{Questions}
+
+\Que{Why removing liquidity from exchange doesn't change the rate}
+
+\Que{Explain implemented fee mechanism for incentivizing liquidity providers}
+
+\Que{Explain at least one gas optimisation method you used}
+
+\subsection*{Feedback questions}
+
+\Que{How much time did you spend on the assignment}
+
+\Que{What would one useful information before you started to work on this assignment}
+
+\Que{What would one thing you would change}
+
+\section{Implementation}
+
+\section{Testing}
+
+\section{Security analysis}
+
+\section{Conclusion}
 
 \bibliography{bibliography}
 \bibliographystyle{ieeetr}
