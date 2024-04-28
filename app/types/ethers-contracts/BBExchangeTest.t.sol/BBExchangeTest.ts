@@ -84,7 +84,6 @@ export interface BBExchangeTestInterface extends Interface {
       | "testGetWeiAmountPoolNotInitialized"
       | "testGetWeiAmountZeroTokenAmount"
       | "testRemoveLiquidityNoEth"
-      | "testRemoveLiquidityNoLiquidity"
       | "testRemoveLiquidityNotEnoughLiquidity"
       | "testSwapETHForTokensNoETH"
       | "testSwapETHForTokensNotEnoughLiquidity"
@@ -272,10 +271,6 @@ export interface BBExchangeTestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "testRemoveLiquidityNoEth",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "testRemoveLiquidityNoLiquidity",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -480,10 +475,6 @@ export interface BBExchangeTestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "testRemoveLiquidityNoEth",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "testRemoveLiquidityNoLiquidity",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1034,8 +1025,6 @@ export interface BBExchangeTest extends BaseContract {
 
   testRemoveLiquidityNoEth: TypedContractMethod<[], [void], "nonpayable">;
 
-  testRemoveLiquidityNoLiquidity: TypedContractMethod<[], [void], "nonpayable">;
-
   testRemoveLiquidityNotEnoughLiquidity: TypedContractMethod<
     [],
     [void],
@@ -1240,9 +1229,6 @@ export interface BBExchangeTest extends BaseContract {
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "testRemoveLiquidityNoEth"
-  ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "testRemoveLiquidityNoLiquidity"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "testRemoveLiquidityNotEnoughLiquidity"

@@ -176,10 +176,39 @@ contract BBExchange is Ownable {
 
     // Function removeAllLiquidity: Removes all liquidity that msg.sender is entitled to withdraw
     // You can change the inputs, or the scope of your function, as needed.
-    function removeAllLiquidity(uint256 maxExchangeRate, uint256 minExchangeRate) external payable {
-        /**
-         * TODO: Implement this function ******
-         */
+    function removeAllLiquidity(uint256 minWeiAmount, uint256 minTokenAmount) external payable {
+        uint256 liquidity = lps[msg.sender];
+        require(liquidity > 0, "No liquidity found for sender");
+
+        uint256 ethAmount = (liquidity * weiReserves) / totalLiquidity;
+        uint256 weiFee = (ethAmount * swapFeeNumerator * weiReserves) / (totalLiquidity * swapFeeDenominator);
+        (uint256 tokenFees,) = getTokenAmount(weiFee);
+
+        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity);
+        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient wei liquidity");
+        (uint256 tokenContribution,) = getTokenAmount(ethAmount);
+        require(tokenContribution <= tokenReserves - MIN_LIQUIDITY, "Insufficient token liquidity");
+        require(ethContribution >= minWeiAmount && tokenContribution >= minTokenAmount, "Too much slipage");
+
+        ethContribution += weiFee;
+        tokenContribution += tokenFees;
+
+        // Update reserves
+        weiReserves -= ethContribution;
+        tokenReserves -= tokenContribution;
+        k = weiReserves * tokenReserves;
+
+        // Update liquidity records
+        lps[msg.sender] = 0;
+        totalLiquidity -= liquidity;
+        removeLP(lpProviders.length - 1);
+
+        // Transfer ETH and tokens back to the liquidity provider
+        (bool ethSuccess,) = msg.sender.call{value: ethContribution}("");
+        require(ethSuccess, "Failed to send ETH");
+
+        bool tokenSuccess = token.transfer(msg.sender, tokenContribution);
+        require(tokenSuccess, "Failed to send tokens");
     }
     /**
      *  Define additional functions for liquidity fees here as needed **

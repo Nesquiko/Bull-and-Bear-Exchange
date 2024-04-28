@@ -91,13 +91,34 @@
                 v-model="maxSlippageLiquid"
               />
               <div>
-                <button @click="addLiquidity(selectedAccount.address)">
+                <button
+                  @click="
+                    addLiquidity(
+                      selectedAccount.address,
+                      poolState.tokenEthRate
+                    )
+                  "
+                >
                   Add Liquidity
                 </button>
-                <button @click="removeLiquidity(selectedAccount.address)">
+                <button
+                  @click="
+                    removeLiquidity(
+                      selectedAccount.address,
+                      poolState.tokenEthRate
+                    )
+                  "
+                >
                   Remove Liquidity
                 </button>
-                <button @click="removeAllLiquidity">
+                <button
+                  @click="
+                    removeAllLiquidity(
+                      selectedAccount.address,
+                      poolState.tokenEthRate
+                    )
+                  "
+                >
                   Remove All Liquidity
                 </button>
               </div>

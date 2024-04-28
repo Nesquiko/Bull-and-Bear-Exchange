@@ -92,7 +92,7 @@ export interface BBExchangeInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "removeLiquidity",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -291,13 +291,17 @@ export interface BBExchange extends BaseContract {
   owner: TypedContractMethod<[], [string], "view">;
 
   removeAllLiquidity: TypedContractMethod<
-    [maxExchangeRate: BigNumberish, minExchangeRate: BigNumberish],
+    [minWeiAmount: BigNumberish, minTokenAmount: BigNumberish],
     [void],
     "payable"
   >;
 
   removeLiquidity: TypedContractMethod<
-    [ethAmount: BigNumberish],
+    [
+      ethAmount: BigNumberish,
+      minWeiAmount: BigNumberish,
+      minTokenAmount: BigNumberish
+    ],
     [void],
     "payable"
   >;
@@ -384,13 +388,21 @@ export interface BBExchange extends BaseContract {
   getFunction(
     nameOrSignature: "removeAllLiquidity"
   ): TypedContractMethod<
-    [maxExchangeRate: BigNumberish, minExchangeRate: BigNumberish],
+    [minWeiAmount: BigNumberish, minTokenAmount: BigNumberish],
     [void],
     "payable"
   >;
   getFunction(
     nameOrSignature: "removeLiquidity"
-  ): TypedContractMethod<[ethAmount: BigNumberish], [void], "payable">;
+  ): TypedContractMethod<
+    [
+      ethAmount: BigNumberish,
+      minWeiAmount: BigNumberish,
+      minTokenAmount: BigNumberish
+    ],
+    [void],
+    "payable"
+  >;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
