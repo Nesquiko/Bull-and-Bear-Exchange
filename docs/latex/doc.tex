@@ -12,6 +12,8 @@
 \usepackage{subfiles}
 \usepackage{lipsum}
 \usepackage[outputdir=build]{minted}
+\usepackage{amsfonts}
+\usepackage{amsmath}
 
 \usepackage[colorlinks = true,
             linkcolor = blue,
@@ -30,7 +32,7 @@
 \newcommand\Ans[2][]{
     \leavevmode\par\noindent
    {\leftskip37pt
-    A --- \textbf{#1}#2\par}}
+    \textbf{#1}#2\par}}
 
 \raggedbottom
 \oddsidemargin=0cm
@@ -44,7 +46,7 @@
 \author{Lukáš Častven, Jakub Jelínek\\[2pt]
 	{\small Slovenská technická univerzita v Bratislave}\\
 	{\small Fakulta informatiky a informačných technológií}\\
-	{\small \texttt{xcastven@stuba.sk, xjelinek@stuba.sk}}
+	{\small \texttt{xcastven@stuba.sk, xjelinekj@stuba.sk}}
 }
 
 \date{\today}
@@ -67,18 +69,92 @@ for swapping Ether with our custom ERC20 token.
 \section{Questions}
 
 \Que{Why removing liquidity from exchange doesn't change the rate}
+\Ans{
+When a liquidity provider adds liquidity, the provided amount of Eth and
+BBT must have the same value (according to the current exchange rate) in order
+to preserve the exchange rate of those two assets.
+
+For example, if exchange rate is 4 Eth for 3 BBT (4:3), provider must provide
+$4n$ Eth and $3n$ BBT, where $n \in \mathbb{N}^+$
+}
 
 \Que{Explain implemented fee mechanism for incentivizing liquidity providers}
+\Ans{
+During each swap, user's input amount of Eth or BBT is converted to amount of the
+other asset with equivalent value, and this amount would be swapped to the user.
+However, when a fee of value $f\%$ is present, this converted is reduced by
+the fee, which stays in the pool and user gets $(1 - f) * converted\_amount$.
+
+Example, user wants to swap 100 Eth for BBT, or vice versa, at exchange rate 1:1,
+and $x = 5000, y = 5000 \Rightarrow k = 25000$. All calculations are in integer
+format, meaning no floating numbers. The move on the constant product
+formula tells us that the amount to be swapped is:
+
+\[(x + dx) * (y - dy) = k\]
+\[(5000 + 100) * (5000 - dy) = 25000\]
+\[dy \approx 98\]
+
+98 is the amount without fees. To apply a fee of $f = 3\%$, it must be converted to
+a fractional form of $f = \frac{fee\_numerator}{fee\_denominator}$ and then applied
+like this:
+
+\begin{equation}
+    \begin{aligned}
+        with\_fee & = 98 * (1 - f)\\
+        & = 98 * (1 - \frac{fee\_numerator}{fee\_denominator})\\
+        & = 98 * \frac{fee\_denominator - fee\_numerator}{fee\_denominator}\\
+        & = 98 * \frac{100 - 3}{100}\\
+        & \approx 95
+    \end{aligned}
+\end{equation}
+
+So the final amount of BBT (or Eth) to be swapped at given exchange state is 95,
+meaning 3 units of swapped asset stay in the pool as a fee.
+
+When a liquidity provider deposits liquidity into a pool, he/she owns a portion
+of the pool, and based on that portion, fees will be payed back when the liquidity
+will be removed. The portion is tracked in the contract for each provider, and
+when new liquidity is added, the amount of Eth deposited is added to the provider's
+liquidity portion. Then when withdrawing liquidity, providers gets:
+
+\begin{itemize}
+    \item Removed liquidity amount of Eth,
+    \item Amount of BBT equivalent in value to the Eth amount,
+    \item And additional assets according to the provider's portion of the pool,
+        where the portion is calculated as $\frac{providers\_liquidity}{total\_liquidity}$.
+\end{itemize}
+}
+
 
 \Que{Explain at least one gas optimisation method you used}
+\Ans{
+One method we used is called \textbf{CEI - checks, effects, interactions}\cite{securityConsiderationsCEI}.
+\textbf{CEI} guides developer to first check for all possible preconditions
+that must be true to achieve desired functionality of the contract. Then
+the effects take place. These mutate the state of the contract. And interactions
+with external contracts are last.
+
+The \textbf{effects} phase saves gas, because instead of reverting in the middle
+of a computation due to some false condition, the transaction reverts at the
+beginning and less computation is done, meaning less gas is spent.
+
+The last phase also helps with reentrancy bugs, but that is out of scope for
+this answer.
+}
 
 \subsection*{Feedback questions}
 
 \Que{How much time did you spend on the assignment}
+\Ans{Each of us spent around 25 hours on this assignment.}
 
-\Que{What would one useful information before you started to work on this assignment}
+\Que{What would be one useful information before you started to work on this assignment}
+\Ans{The switch in mentality from having a standard frontend-backend application to
+frontend-blockchain would help in the beginning.}
 
-\Que{What would one thing you would change}
+\Que{What one thing you would change}
+\Ans{Some automated test suite from you would be nice, for example, implement
+this interface on contract and here is a Hardhat/Foundry/\ldots\; test file which
+gives you confidence that what you implemented is correct.}
 
 \section{Implementation}
 
