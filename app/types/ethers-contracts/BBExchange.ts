@@ -294,7 +294,7 @@ export interface BBExchange extends BaseContract {
 
   removeLiquidity: TypedContractMethod<
     [
-      ethAmount: BigNumberish,
+      amount: BigNumberish,
       minWeiAmount: BigNumberish,
       minTokenAmount: BigNumberish
     ],
@@ -388,7 +388,7 @@ export interface BBExchange extends BaseContract {
     nameOrSignature: "removeLiquidity"
   ): TypedContractMethod<
     [
-      ethAmount: BigNumberish,
+      amount: BigNumberish,
       minWeiAmount: BigNumberish,
       minTokenAmount: BigNumberish
     ],

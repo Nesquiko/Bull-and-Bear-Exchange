@@ -51,9 +51,8 @@ contract BBExchange is Ownable {
         weiReserves = msg.value;
         k = tokenReserves * weiReserves;
 
-        uint256 liquidity = weiReserves - MIN_LIQUIDITY; // locks MIN_LIQUIDITY
-        lps[msg.sender] = liquidity;
-        totalLiquidity += liquidity;
+        lps[msg.sender] = weiReserves - MIN_LIQUIDITY; // locks MIN_LIQUIDITY
+        totalLiquidity += weiReserves;
         lpProviders.push(msg.sender);
     }
 
@@ -105,83 +104,36 @@ contract BBExchange is Ownable {
     }
 
     // Function removeLiquidity: Removes liquidity given the desired amount of ETH to remove.
-    // You can change the inputs, or the scope of your function, as needed.
-    function removeLiquidity(uint256 ethAmount, uint256 minWeiAmount, uint256 minTokenAmount) public payable {
-        require(ethAmount > 0, "Amount must be greater than zero");
+    function removeLiquidity(uint256 amount, uint256 minWeiAmount, uint256 minTokenAmount) public payable {
+        require(amount > 0, "Amount must be greater than zero");
         uint256 liquidity = lps[msg.sender];
         require(liquidity > 0, "No liquidity found for sender");
-        require(ethAmount <= liquidity, "Not enough liquidity");
+        require(amount <= liquidity, "Not enough liquidity");
 
-        uint256 weiFee = (ethAmount * swapFeeNumerator * weiReserves) / (totalLiquidity * swapFeeDenominator);
-        (uint256 tokenFees,) = getTokenAmount(weiFee);
+        uint256 weiAmount = amount * weiReserves / totalLiquidity;
+        require(weiAmount >= minWeiAmount, "Wei amount bellow minWeiAmount");
+        uint256 tokenAmount = amount * tokenReserves / totalLiquidity;
+        require(tokenAmount >= minTokenAmount, "Token Amount bellow minTokenAmount");
 
-        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity);
-        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient wei liquidity");
-        (uint256 tokenContribution,) = getTokenAmount(ethAmount);
-        require(tokenContribution <= tokenReserves - MIN_LIQUIDITY, "Insufficient token liquidity");
-        require(ethContribution >= minWeiAmount && tokenContribution >= minTokenAmount, "Too much slipage");
-
-        ethContribution += weiFee;
-        tokenContribution += tokenFees;
-
-        // Update reserves
-        weiReserves -= ethContribution;
-        tokenReserves -= tokenContribution;
+        weiReserves -= weiAmount;
+        tokenReserves -= tokenAmount;
         k = weiReserves * tokenReserves;
 
-        // Update liquidity records
-        lps[msg.sender] -= ethAmount;
-        totalLiquidity -= ethAmount;
+        lps[msg.sender] -= amount;
+        totalLiquidity -= amount;
 
-        // Transfer ETH and tokens back to the liquidity provider
-        (bool ethSuccess,) = msg.sender.call{value: ethContribution}("");
-        require(ethSuccess, "Failed to send ETH");
+        (bool succes,) = msg.sender.call{value: weiAmount}("");
+        require(succes, "Failed to send ETH");
 
-        bool tokenSuccess = token.transfer(msg.sender, tokenContribution);
-        require(tokenSuccess, "Failed to send tokens");
+        succes = token.transfer(msg.sender, tokenAmount);
+        require(succes, "Failed to send tokens");
     }
 
     // Function removeAllLiquidity: Removes all liquidity that msg.sender is entitled to withdraw
     // You can change the inputs, or the scope of your function, as needed.
     function removeAllLiquidity(uint256 minWeiAmount, uint256 minTokenAmount) external payable {
-        uint256 liquidity = lps[msg.sender];
-        require(liquidity > 0, "No liquidity found for sender");
-
-        uint256 ethAmount = (liquidity * weiReserves) / totalLiquidity;
-        uint256 weiFee = (ethAmount * swapFeeNumerator * weiReserves) / (totalLiquidity * swapFeeDenominator);
-        (uint256 tokenFees,) = getTokenAmount(weiFee);
-
-        uint256 ethContribution = ((ethAmount * weiReserves) / totalLiquidity);
-        require(ethContribution <= weiReserves - MIN_LIQUIDITY, "Insufficient wei liquidity");
-        (uint256 tokenContribution,) = getTokenAmount(ethAmount);
-        require(tokenContribution <= tokenReserves - MIN_LIQUIDITY, "Insufficient token liquidity");
-        require(ethContribution >= minWeiAmount && tokenContribution >= minTokenAmount, "Too much slipage");
-
-        ethContribution += weiFee;
-        tokenContribution += tokenFees;
-
-        // Update reserves
-        weiReserves -= ethContribution;
-        tokenReserves -= tokenContribution;
-        k = weiReserves * tokenReserves;
-
-        // Update liquidity records
-        lps[msg.sender] = 0;
-        totalLiquidity -= liquidity;
-        removeLP(lpProviders.length - 1);
-
-        // Transfer ETH and tokens back to the liquidity provider
-        (bool ethSuccess,) = msg.sender.call{value: ethContribution}("");
-        require(ethSuccess, "Failed to send ETH");
-
-        bool tokenSuccess = token.transfer(msg.sender, tokenContribution);
-        require(tokenSuccess, "Failed to send tokens");
+        removeLiquidity(lps[msg.sender], minWeiAmount, minTokenAmount);
     }
-    /**
-     *  Define additional functions for liquidity fees here as needed **
-     */
-
-    /* ========================= Swap Functions =========================  */
 
     /// @notice Swaps tokens for ETH
     /// @param tokenAmount how many tokens the sender is swapping

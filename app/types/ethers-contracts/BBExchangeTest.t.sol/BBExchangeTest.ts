@@ -83,8 +83,20 @@ export interface BBExchangeTestInterface extends Interface {
       | "testGetWeiAmountCorrect"
       | "testGetWeiAmountPoolNotInitialized"
       | "testGetWeiAmountZeroTokenAmount"
+      | "testRemoveAllLiquidityCorrectBalances"
+      | "testRemoveAllLiquidityNoLiquidity"
+      | "testRemoveAllLiquiditySetCorrectLiquidity"
+      | "testRemoveAllLiquiditySetCorrectReserves"
+      | "testRemoveAllLiquidityTokenAmountBellowMin"
+      | "testRemoveAllLiquidityWeiAmountBellowMin"
+      | "testRemoveLiquidityCorrectBalances"
       | "testRemoveLiquidityNoEth"
+      | "testRemoveLiquidityNoLiquidity"
       | "testRemoveLiquidityNotEnoughLiquidity"
+      | "testRemoveLiquiditySetCorrectLiquidity"
+      | "testRemoveLiquiditySetCorrectReserves"
+      | "testRemoveLiquidityTokenAmountBellowMin"
+      | "testRemoveLiquidityWeiAmountBellowMin"
       | "testSwapETHForTokensNoETH"
       | "testSwapETHForTokensNotEnoughLiquidity"
       | "testSwapETHForTokensTooMuchSlippage"
@@ -270,11 +282,59 @@ export interface BBExchangeTestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "testRemoveAllLiquidityCorrectBalances",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveAllLiquidityNoLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveAllLiquiditySetCorrectLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveAllLiquiditySetCorrectReserves",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveAllLiquidityTokenAmountBellowMin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveAllLiquidityWeiAmountBellowMin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveLiquidityCorrectBalances",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "testRemoveLiquidityNoEth",
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "testRemoveLiquidityNoLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "testRemoveLiquidityNotEnoughLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveLiquiditySetCorrectLiquidity",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveLiquiditySetCorrectReserves",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveLiquidityTokenAmountBellowMin",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "testRemoveLiquidityWeiAmountBellowMin",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -474,11 +534,59 @@ export interface BBExchangeTestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquidityCorrectBalances",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquidityNoLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquiditySetCorrectLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquiditySetCorrectReserves",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquidityTokenAmountBellowMin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveAllLiquidityWeiAmountBellowMin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveLiquidityCorrectBalances",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "testRemoveLiquidityNoEth",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "testRemoveLiquidityNoLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "testRemoveLiquidityNotEnoughLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveLiquiditySetCorrectLiquidity",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveLiquiditySetCorrectReserves",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveLiquidityTokenAmountBellowMin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "testRemoveLiquidityWeiAmountBellowMin",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1027,9 +1135,77 @@ export interface BBExchangeTest extends BaseContract {
     "nonpayable"
   >;
 
+  testRemoveAllLiquidityCorrectBalances: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveAllLiquidityNoLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveAllLiquiditySetCorrectLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveAllLiquiditySetCorrectReserves: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveAllLiquidityTokenAmountBellowMin: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveAllLiquidityWeiAmountBellowMin: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveLiquidityCorrectBalances: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   testRemoveLiquidityNoEth: TypedContractMethod<[], [void], "nonpayable">;
 
+  testRemoveLiquidityNoLiquidity: TypedContractMethod<[], [void], "nonpayable">;
+
   testRemoveLiquidityNotEnoughLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveLiquiditySetCorrectLiquidity: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveLiquiditySetCorrectReserves: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveLiquidityTokenAmountBellowMin: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
+  testRemoveLiquidityWeiAmountBellowMin: TypedContractMethod<
     [],
     [void],
     "nonpayable"
@@ -1232,10 +1408,46 @@ export interface BBExchangeTest extends BaseContract {
     nameOrSignature: "testGetWeiAmountZeroTokenAmount"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "testRemoveAllLiquidityCorrectBalances"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveAllLiquidityNoLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveAllLiquiditySetCorrectLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveAllLiquiditySetCorrectReserves"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveAllLiquidityTokenAmountBellowMin"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveAllLiquidityWeiAmountBellowMin"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveLiquidityCorrectBalances"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "testRemoveLiquidityNoEth"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "testRemoveLiquidityNoLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "testRemoveLiquidityNotEnoughLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveLiquiditySetCorrectLiquidity"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveLiquiditySetCorrectReserves"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveLiquidityTokenAmountBellowMin"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "testRemoveLiquidityWeiAmountBellowMin"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "testSwapETHForTokensNoETH"
