@@ -1,30 +1,33 @@
 import { ref } from 'vue';
-import { exchangeContract, provider } from '@/constants';
+import {
+  exchangeAddress,
+  exchangeContract,
+  provider,
+  tokenContract,
+} from '@/constants';
 
 export const useLiquidity = () => {
-  const amtEth = ref('');
-  const maxSlippageLiquid = ref('');
+  const amtEth = ref<number | undefined>(undefined);
+  const maxSlippageLiquid = ref<number | undefined>(undefined);
 
   const addLiquidity = async (selectedAccount: string, ethRate: number) => {
-    console.log('add liquidity');
     if (!amtEth.value || !maxSlippageLiquid.value) return;
-    try {
-      await exchangeContract
-        .connect(await provider.getSigner(selectedAccount))
-        // value = input [0]=input*percetage [1]=input*rate [2]=input*rate*percentage
-        // 160 90 60 200  (1.rate)
-        // TODO remove all liquidty, add real values to add/remove
-        .addLiquidity(
-          amtEth.value * (maxSlippageLiquid.value / 100),
-          amtEth.value * ethRate,
-          amtEth.value * ethRate * (maxSlippageLiquid.value / 100),
-          { value: amtEth.value }
-        );
-      amtEth.value = '';
-      maxSlippageLiquid.value = '';
-    } catch (e) {
-      console.log(e);
-    }
+
+    const minLiqidity = Math.floor(
+      amtEth.value * (1 - maxSlippageLiquid.value / 100)
+    );
+
+    const maxTokenAmount = Math.floor(
+      amtEth.value * ethRate * (1 + maxSlippageLiquid.value / 100)
+    );
+
+    await tokenContract.approve(exchangeAddress, maxTokenAmount);
+    await exchangeContract
+      .connect(await provider.getSigner(selectedAccount))
+      .addLiquidity(minLiqidity, maxTokenAmount, { value: amtEth.value });
+
+    amtEth.value = undefined;
+    maxSlippageLiquid.value = undefined;
   };
 
   const removeLiquidity = async (selectedAccount: string, ethRate: number) => {

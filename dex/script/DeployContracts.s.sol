@@ -7,7 +7,7 @@ import {BBToken} from "../src/BBToken.sol";
 import {BBExchange} from "../src/BBExchange.sol";
 
 contract DeployContracts is Script {
-    uint256 private constant BB_TOKEN_SUPPLY = 5_000;
+    uint256 private constant BB_TOKEN_SUPPLY = 10_000;
 
     function run() external returns (BBToken token, BBExchange exchange, address owner) {
         DeployConfig config = new DeployConfig();

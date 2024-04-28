@@ -28,9 +28,13 @@
                 class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
               >
                 <h2>Swap</h2>
-                <div class="grid lg:grid-cols-3 text-center gap-4">
+                <div class="grid lg:grid-cols-2 text-center gap-4">
                   <p>1 {{ tokenSymbol }} = {{ poolState.ethTokenRate }} Wei</p>
-                  <p>Swap Fee {{ poolState.fee * 100 }}%</p>
+                  <p>1 ETH = {{ poolState.tokenEthRate }} {{ tokenSymbol }}</p>
+                  <p>
+                    Swap Fee
+                    {{ (poolState.feeNum / poolState.feeDenom) * 100 }}%
+                  </p>
                   <p>
                     Liquidity {{ poolState.tokenLiquidity }} {{ tokenSymbol }} :
                     {{ poolState.ethLiquidity }} Wei
@@ -65,62 +69,53 @@
               </div>
             </div>
 
-            <div>
-              <h1>Current rate:</h1>
-              <h3>
-                1 ETH = {{ poolState.tokenEthRate }}
-                {{ tokenSymbol }}
-              </h3>
-              <h3>1 {{ tokenSymbol }} = {{ poolState.ethTokenRate }} ETH</h3>
-            </div>
-            <div>
-              <h1>Current Liquidity:</h1>
-              <h3>{{ poolState.tokenLiquidity }} {{ tokenSymbol }}</h3>
-              <h3>{{ poolState.ethLiquidity }} Wei</h3>
-            </div>
-            <div>
-              <h4>Adjust Liquidity:</h4>
-              <label for="amt-eth">Amount in Eth:</label>
-              <input id="amt-eth" type="text" v-model="amtEth" />
-              <label for="max-slippage-liquid"
-                >Maximum Slippage Percentage:</label
-              >
-              <input
-                id="max-slippage-liquid"
-                type="text"
-                v-model="maxSlippageLiquid"
-              />
+            <div
+              class="block p-6 bg-white border border-gray-200 rounded-lg shadow mb-4 sm:mb-6 lg:mb-8"
+            >
               <div>
-                <button
-                  @click="
-                    addLiquidity(
-                      selectedAccount.address,
-                      poolState.tokenEthRate
-                    )
-                  "
+                <h2>Liquidity</h2>
+                <label for="amt-eth">Amount in Eth:</label>
+                <input
+                  id="amt-eth"
+                  class="w-full mt-2 mb-4 rounded-lg border-1 border-gray-300 bg-gray-50"
+                  type="number"
+                  v-model="amtEth"
+                />
+
+                <label for="max-slippage-liquid"
+                  >Maximum Slippage Percentage:</label
                 >
-                  Add Liquidity
-                </button>
-                <button
-                  @click="
-                    removeLiquidity(
-                      selectedAccount.address,
-                      poolState.tokenEthRate
-                    )
-                  "
-                >
-                  Remove Liquidity
-                </button>
-                <button
-                  @click="
-                    removeAllLiquidity(
-                      selectedAccount.address,
-                      poolState.tokenEthRate
-                    )
-                  "
-                >
-                  Remove All Liquidity
-                </button>
+                <input
+                  class="w-full mt-2 mb-4 rounded-lg border-1 border-gray-300 bg-gray-50"
+                  id="max-slippage-liquid"
+                  type="number"
+                  max="100"
+                  min="0"
+                  v-model="maxSlippageLiquid"
+                />
+                <div>
+                  <button @click="onAddLiquidity()">Add Liquidity</button>
+                  <button
+                    @click="
+                      removeLiquidity(
+                        selectedAccount.address,
+                        poolState.tokenEthRate
+                      )
+                    "
+                  >
+                    Remove Liquidity
+                  </button>
+                  <button
+                    @click="
+                      removeAllLiquidity(
+                        selectedAccount.address,
+                        poolState.tokenEthRate
+                      )
+                    "
+                  >
+                    Remove All Liquidity
+                  </button>
+                </div>
               </div>
             </div>
           </article>
@@ -142,6 +137,7 @@ import {
   provider,
   tokenContract,
   exchangeContract,
+  type PoolState,
 } from '@/constants';
 import { ethers } from 'ethers';
 
@@ -162,13 +158,13 @@ const {
 } = useLiquidity();
 
 const swapWeiForTokens = async () => {
-  await swapEth(poolState.value.tokenEthRate, toRaw(selectedAccount.value));
+  await swapEth(toRaw(selectedAccount.value), poolState.value);
   poolState.value = await getPoolState();
   updateBalances();
 };
 
 const swapTokenForWei = async () => {
-  await swapToken(poolState.value.ethTokenRate, toRaw(selectedAccount.value));
+  await swapToken(toRaw(selectedAccount.value), poolState.value);
   poolState.value = await getPoolState();
   updateBalances();
 };
@@ -186,25 +182,40 @@ updateBalances();
 
 watch(selectedAccount, updateBalances);
 
-const getPoolState = async () => {
+const onAddLiquidity = async () => {
+  await addLiquidity(
+    selectedAccount.value.address,
+    poolState.value.tokenEthRate
+  );
+  poolState.value = await getPoolState();
+  updateBalances();
+};
+
+const getPoolState = async (): Promise<PoolState> => {
   const liquidityTokens = await tokenContract.balanceOf(exchangeAddress);
   const liquidityEth = await provider.getBalance(exchangeAddress);
   const [feeNum, feeDenom] = await exchangeContract.getSwapFee();
-  const fee = Number(feeNum) / Number(feeDenom);
-  return calculatePoolState(liquidityTokens, liquidityEth, fee);
+  return calculatePoolState(
+    liquidityTokens,
+    liquidityEth,
+    Number(feeNum),
+    Number(feeDenom)
+  );
 };
 
 const calculatePoolState = (
   liquidityTokens: bigint,
   liquidityEth: bigint,
-  fee: number
-) => {
+  feeNum: number,
+  feeDenom: number
+): PoolState => {
   return {
     tokenLiquidity: Number(liquidityTokens),
     ethLiquidity: Number(liquidityEth),
     tokenEthRate: Number(liquidityTokens) / Number(liquidityEth) || 0,
     ethTokenRate: Number(liquidityEth) / Number(liquidityTokens) || 0,
-    fee,
+    feeNum,
+    feeDenom,
   };
 };
 
@@ -222,7 +233,8 @@ if (
   poolState.value = calculatePoolState(
     TOTAL_SUPPLY,
     TOTAL_SUPPLY,
-    poolState.value.fee
+    poolState.value.feeNum,
+    poolState.value.feeDenom
   );
   console.log('init finished');
 }

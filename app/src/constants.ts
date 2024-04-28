@@ -20,3 +20,12 @@ export const exchangeContract = BBExchange__factory.connect(
   exchangeAddress,
   await provider.getSigner()
 );
+
+export interface PoolState {
+  tokenLiquidity: number;
+  ethLiquidity: number;
+  tokenEthRate: number;
+  ethTokenRate: number;
+  feeNum: number;
+  feeDenom: number;
+}

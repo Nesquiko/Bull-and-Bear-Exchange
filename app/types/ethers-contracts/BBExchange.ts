@@ -61,7 +61,7 @@ export interface BBExchangeInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "addLiquidity",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "createPool",
@@ -253,11 +253,7 @@ export interface BBExchange extends BaseContract {
   MIN_LIQUIDITY: TypedContractMethod<[], [bigint], "view">;
 
   addLiquidity: TypedContractMethod<
-    [
-      minWeiAmount: BigNumberish,
-      tokenAmount: BigNumberish,
-      minTokenAmount: BigNumberish
-    ],
+    [minLiquidity: BigNumberish, maxTokenAmount: BigNumberish],
     [void],
     "payable"
   >;
@@ -347,11 +343,7 @@ export interface BBExchange extends BaseContract {
   getFunction(
     nameOrSignature: "addLiquidity"
   ): TypedContractMethod<
-    [
-      minWeiAmount: BigNumberish,
-      tokenAmount: BigNumberish,
-      minTokenAmount: BigNumberish
-    ],
+    [minLiquidity: BigNumberish, maxTokenAmount: BigNumberish],
     [void],
     "payable"
   >;
