@@ -15,9 +15,10 @@
             </option>
           </select>
         </div>
-        <div class="grid lg:grid-cols-2 text-center">
+        <div class="grid lg:grid-cols-3 text-center">
           <p class="text-xl">{{ weiBalance }} Wei</p>
           <p class="text-xl">{{ tokenBalance }} {{ tokenSymbol }}</p>
+          <p class="text-xl">{{ lps }} Liquidity provided</p>
         </div>
       </div>
       <div>
@@ -171,12 +172,14 @@ const swapTokenForWei = async () => {
 
 const weiBalance = ref(0n);
 const tokenBalance = ref(0n);
+const lps = ref(0n);
 
 const updateBalances = async () => {
   weiBalance.value = await provider.getBalance(selectedAccount.value.address);
   tokenBalance.value = await tokenContract.balanceOf(
     selectedAccount.value.address
   );
+  lps.value = await exchangeContract.lpLiquidity(selectedAccount.value.address);
 };
 updateBalances();
 
