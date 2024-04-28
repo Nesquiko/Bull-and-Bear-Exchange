@@ -46,7 +46,8 @@ contract BBExchange is Ownable {
         require(amountTokens <= tokenSupply, "Not have enough tokens to create the pool");
         require(amountTokens > 0, "Need tokens to create pool.");
 
-        token.transferFrom(msg.sender, address(this), amountTokens);
+        bool success = token.transferFrom(msg.sender, address(this), amountTokens);
+        require(success, "token transfer failed");
         tokenReserves = token.balanceOf(address(this));
         weiReserves = msg.value;
         k = tokenReserves * weiReserves;
@@ -147,12 +148,13 @@ contract BBExchange is Ownable {
         require(weiReserves - weiAmount > MIN_LIQUIDITY, "Not enough liquidity");
         require(withFee >= minWeiAmount, "Too much slippage");
 
-        token.transferFrom(msg.sender, address(this), tokenAmount);
+        bool succes = token.transferFrom(msg.sender, address(this), tokenAmount);
+        require(succes, "Token transfer failed");
 
         tokenReserves += tokenAmount;
         weiReserves -= withFee;
 
-        (bool succes,) = payable(msg.sender).call{value: withFee}("");
+        (succes,) = payable(msg.sender).call{value: withFee}("");
         require(succes, "Transfer failed");
     }
 
@@ -170,7 +172,8 @@ contract BBExchange is Ownable {
         weiReserves += weiAmount;
         tokenReserves -= withFee;
 
-        token.transfer(msg.sender, withFee);
+        bool succes = token.transfer(msg.sender, withFee);
+        require(succes, "Token transfer failed");
     }
 
     /// @param tokenAmount amount of token to be converted

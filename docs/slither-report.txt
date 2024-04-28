@@ -1,0 +1,91 @@
+INFO:Detectors:
+BBExchange.createPool(uint256) (src/BBExchange.sol#36-57) ignores return value by token.transferFrom(msg.sender,address(this),amountTokens) (src/BBExchange.sol#49)
+BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157) ignores return value by token.transferFrom(msg.sender,address(this),tokenAmount) (src/BBExchange.sol#150)
+BBExchange.swapETHForTokens(uint256) (src/BBExchange.sol#162-174) ignores return value by token.transfer(msg.sender,withFee) (src/BBExchange.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
+INFO:Detectors:
+BBExchange.addLiquidity(uint256,uint256) (src/BBExchange.sol#76-104) uses a dangerous strict equality:
+        - lps[msg.sender] == 0 (src/BBExchange.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Reentrancy in BBExchange.createPool(uint256) (src/BBExchange.sol#36-57):
+        External calls:
+        - token.transferFrom(msg.sender,address(this),amountTokens) (src/BBExchange.sol#49)
+        State variables written after the call(s):
+        - tokenReserves = token.balanceOf(address(this)) (src/BBExchange.sol#50)
+        BBExchange.tokenReserves (src/BBExchange.sol#16) can be used in cross function reentrancies:
+        - BBExchange.addLiquidity(uint256,uint256) (src/BBExchange.sol#76-104)
+        - BBExchange.createPool(uint256) (src/BBExchange.sol#36-57)
+        - BBExchange.getTokenAmount(uint256) (src/BBExchange.sol#194-204)
+        - BBExchange.getWeiAmount(uint256) (src/BBExchange.sol#179-189)
+        - BBExchange.removeLiquidity(uint256,uint256,uint256) (src/BBExchange.sol#107-130)
+        - BBExchange.swapETHForTokens(uint256) (src/BBExchange.sol#162-174)
+        - BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157)
+        - BBExchange.tokenReserves (src/BBExchange.sol#16)
+        - weiReserves = msg.value (src/BBExchange.sol#51)
+        BBExchange.weiReserves (src/BBExchange.sol#17) can be used in cross function reentrancies:
+        - BBExchange.addLiquidity(uint256,uint256) (src/BBExchange.sol#76-104)
+        - BBExchange.createPool(uint256) (src/BBExchange.sol#36-57)
+        - BBExchange.getTokenAmount(uint256) (src/BBExchange.sol#194-204)
+        - BBExchange.getWeiAmount(uint256) (src/BBExchange.sol#179-189)
+        - BBExchange.removeLiquidity(uint256,uint256,uint256) (src/BBExchange.sol#107-130)
+        - BBExchange.swapETHForTokens(uint256) (src/BBExchange.sol#162-174)
+        - BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157)
+        - BBExchange.weiReserves (src/BBExchange.sol#17)
+Reentrancy in BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157):
+        External calls:
+        - token.transferFrom(msg.sender,address(this),tokenAmount) (src/BBExchange.sol#150)
+        State variables written after the call(s):
+        - tokenReserves += tokenAmount (src/BBExchange.sol#152)
+        BBExchange.tokenReserves (src/BBExchange.sol#16) can be used in cross function reentrancies:
+        - BBExchange.addLiquidity(uint256,uint256) (src/BBExchange.sol#76-104)
+        - BBExchange.createPool(uint256) (src/BBExchange.sol#36-57)
+        - BBExchange.getTokenAmount(uint256) (src/BBExchange.sol#194-204)
+        - BBExchange.getWeiAmount(uint256) (src/BBExchange.sol#179-189)
+        - BBExchange.removeLiquidity(uint256,uint256,uint256) (src/BBExchange.sol#107-130)
+        - BBExchange.swapETHForTokens(uint256) (src/BBExchange.sol#162-174)
+        - BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157)
+        - BBExchange.tokenReserves (src/BBExchange.sol#16)
+        - weiReserves -= withFee (src/BBExchange.sol#153)
+        BBExchange.weiReserves (src/BBExchange.sol#17) can be used in cross function reentrancies:
+        - BBExchange.addLiquidity(uint256,uint256) (src/BBExchange.sol#76-104)
+        - BBExchange.createPool(uint256) (src/BBExchange.sol#36-57)
+        - BBExchange.getTokenAmount(uint256) (src/BBExchange.sol#194-204)
+        - BBExchange.getWeiAmount(uint256) (src/BBExchange.sol#179-189)
+        - BBExchange.removeLiquidity(uint256,uint256,uint256) (src/BBExchange.sol#107-130)
+        - BBExchange.swapETHForTokens(uint256) (src/BBExchange.sol#162-174)
+        - BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157)
+        - BBExchange.weiReserves (src/BBExchange.sol#17)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-1
+INFO:Detectors:
+BBExchange.createPool(uint256) (src/BBExchange.sol#36-57) should emit an event for:
+        - weiReserves = msg.value (src/BBExchange.sol#51)
+        - totalLiquidity += weiReserves (src/BBExchange.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-arithmetic
+INFO:Detectors:
+Reentrancy in BBExchange.createPool(uint256) (src/BBExchange.sol#36-57):
+        External calls:
+        - token.transferFrom(msg.sender,address(this),amountTokens) (src/BBExchange.sol#49)
+        State variables written after the call(s):
+        - k = tokenReserves * weiReserves (src/BBExchange.sol#52)
+        - lpProviders.push(msg.sender) (src/BBExchange.sol#56)
+        - lps[msg.sender] = weiReserves - MIN_LIQUIDITY (src/BBExchange.sol#54)
+        - totalLiquidity += weiReserves (src/BBExchange.sol#55)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+INFO:Detectors:
+BBExchange.removeLP(uint256) (src/BBExchange.sol#61-65) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+INFO:Detectors:
+solc-0.8.25 is not recommended for deployment
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorrect-versions-of-solidity
+INFO:Detectors:
+Low level call in BBExchange.removeLiquidity(uint256,uint256,uint256) (src/BBExchange.sol#107-130):
+        - (succes) = msg.sender.call{value: weiAmount}() (src/BBExchange.sol#125)
+Low level call in BBExchange.swapTokensForETH(uint256,uint256) (src/BBExchange.sol#141-157):
+        - (succes) = address(msg.sender).call{value: withFee}() (src/BBExchange.sol#155)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Detectors:
+BBExchange.swapFeeDenominator (src/BBExchange.sol#26) should be constant
+BBExchange.swapFeeNumerator (src/BBExchange.sol#25) should be constant
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+INFO:Slither:. analyzed (43 contracts with 94 detectors), 14 result(s) found
