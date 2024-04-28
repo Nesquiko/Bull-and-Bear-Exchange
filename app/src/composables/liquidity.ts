@@ -44,7 +44,10 @@ export const useLiquidity = () => {
     }
   };
 
-  const removeAllLiquidity = (selectedAccount: string, ethRate: number) => {
+  const removeAllLiquidity = async (
+    selectedAccount: string,
+    ethRate: number
+  ) => {
     if (!maxSlippageLiquid.value) return;
     try {
       await exchangeContract
