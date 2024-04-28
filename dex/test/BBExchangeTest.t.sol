@@ -23,10 +23,10 @@ contract BBExchangeTest is Test {
     address lp2;
     address swapper;
 
-    modifier initializedExchange(uint256 liquidityAmount, address owner) {
-        createAllowance(owner, address(exchange), liquidityAmount);
+    modifier initializedExchange(uint256 weiAmount, uint256 tokenAmount, address owner) {
+        createAllowance(owner, address(exchange), tokenAmount);
         vm.prank(owner);
-        exchange.createPool{value: liquidityAmount}(liquidityAmount);
+        exchange.createPool{value: weiAmount}(tokenAmount);
         _;
     }
 
@@ -66,141 +66,140 @@ contract BBExchangeTest is Test {
         token.transfer(swapper, SWAPPERS_TOKEN_BALANCE);
     }
 
-    function testAddLiquidityWeiAppreciatedCorrectLiquidityAdded()
-        public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500, 400)
-    {
+    function testAddLiquidityDoesntChangeRate() public initializedExchange(4000, 3000, lp) {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
-        uint256 expectedLiquidity = 82 * exchange.totalLiquidity() / exchange.weiReserves();
-        uint256 expectedTotalLiquidity = exchange.totalLiquidity() + expectedLiquidity;
+        uint256 weiProvided = 400;
+        uint256 tokenProvided = 300;
+
+        uint256 previousWeiReserves = exchange.weiReserves();
+        uint256 previousTokenReserves = exchange.tokenReserves();
 
         vm.prank(lp2);
-        exchange.addLiquidity{value: 100}(80, 100, 80);
+        exchange.addLiquidity{value: weiProvided}(weiProvided - 1, tokenProvided);
+
+        uint256 weiReserves = exchange.weiReserves();
+        uint256 tokenReserves = exchange.tokenReserves();
+
+        uint256 previousRate = (previousWeiReserves * 10 ** 18) / (previousTokenReserves * 10 ** 18);
+        uint256 currentRate = (weiReserves * 10 ** 18) / (tokenReserves * 10 ** 18);
+        assertEq(previousRate, currentRate);
+    }
+
+    function testAddLiquidityCorrectBalances() public initializedExchange(4000, 3000, lp) {
+        createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
+        uint256 weiProvided = 400;
+        uint256 tokenProvided = 300;
+
+        vm.prank(lp2);
+        exchange.addLiquidity{value: weiProvided}(weiProvided - 1, tokenProvided);
+
+        assertEq(lp2.balance, LP_WEI_BALANCE - weiProvided);
+        assertEq(token.balanceOf(lp2), LP2_TOKEN_BALANCE - tokenProvided);
+        assertEq(address(exchange).balance, 4000 + weiProvided);
+        assertEq(token.balanceOf(address(exchange)), 3000 + tokenProvided);
+    }
+
+    function testAddLiquidityCorrectReservesSet() public initializedExchange(4000, 3000, lp) {
+        createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
+        uint256 expectedWeiProvided = 400;
+        uint256 expectedTokenProvided = 300;
+        uint256 expectedWeiReserves = 4000 + expectedWeiProvided;
+        uint256 expectedTokenReserves = 3000 + expectedTokenProvided;
+        uint256 expectedK = expectedWeiReserves * expectedTokenReserves;
+
+        vm.prank(lp2);
+        exchange.addLiquidity{value: expectedWeiProvided}(expectedWeiProvided - 1, expectedTokenProvided);
+
+        assertEq(expectedWeiReserves, exchange.weiReserves());
+        assertEq(expectedTokenReserves, exchange.tokenReserves());
+        assertEq(expectedK, exchange.k());
+    }
+
+    function testAddLiquidityCorrectLiquidityAdded() public initializedExchange(4000, 3000, lp) {
+        createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
+        uint256 expectedLiquidity = 400 - 1; // MIN_LIQUIDITY is 1
+        uint256 expectedTotalLiquidity = 3999 + expectedLiquidity;
+
+        vm.prank(lp2);
+        exchange.addLiquidity{value: 400}(399, 300);
 
         assertEq(expectedLiquidity, exchange.lpLiquidity(lp2));
         assertEq(expectedTotalLiquidity, exchange.totalLiquidity());
         assertEq(lp2, exchange.lpAt(1));
     }
 
-    function testAddLiquidityWeiAppreciatedProvideLiquidity()
-        public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500, 400)
-    {
+    function testAddLiquidityUnderMinimumLiquidity() public initializedExchange(4000, 3000, lp) {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
+        vm.expectRevert(bytes("Rate change exceeds desired minimum liquidity"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: 100}(80, 100, 80);
-
-        uint256 expectedWeiProvided = 82;
-        uint256 expectedWeiReserves = LP_TOKEN_BALANCE - 442 + expectedWeiProvided;
-        uint256 expectedTokenReserves = LP_TOKEN_BALANCE + 500 + 100;
-        uint256 expectedK = expectedWeiReserves * expectedTokenReserves;
-
-        assertEq(expectedWeiReserves, exchange.weiReserves());
-        assertEq(expectedTokenReserves, exchange.tokenReserves());
-        assertEq(lp2.balance, LP_WEI_BALANCE - expectedWeiProvided);
-        assertEq(token.balanceOf(lp2), LP2_TOKEN_BALANCE - 100);
-        assertEq(expectedK, exchange.k());
+        exchange.addLiquidity{value: 400}(400, 300);
     }
 
-    function testAddLiquidityTokenAppreciatedProvideLiquidity()
-        public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapWeiForTokens(swapper, 500, 400)
-    {
+    function testAddLiquidityExceedsMaxTokenAmount() public initializedExchange(4000, 3000, lp) {
         createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
+        vm.expectRevert(bytes("Rate change exceeds desired max token amount"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: 100}(80, 100, 80);
-
-        uint256 expectedTokenProvided = 82;
-        uint256 expectedWeiReserves = LP_TOKEN_BALANCE + 500 + 100;
-        uint256 expectedTokenReserves = LP_TOKEN_BALANCE - 442 + expectedTokenProvided;
-        uint256 expectedK = expectedWeiReserves * expectedTokenReserves;
-
-        assertEq(expectedWeiReserves, exchange.weiReserves());
-        assertEq(expectedTokenReserves, exchange.tokenReserves());
-        assertEq(lp2.balance, LP_WEI_BALANCE - 100);
-        assertEq(token.balanceOf(lp2), LP2_TOKEN_BALANCE - expectedTokenProvided);
-        assertEq(expectedK, exchange.k());
+        exchange.addLiquidity{value: 400}(400, 300 - 1);
     }
 
-    function testAddLiquidityWeiQuoteBellowMin()
+    function testAddLiquidityTokenTransferNotAllowed()
         public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapTokensForEth(swapper, 500, 400)
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
     {
-        createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
-        vm.expectRevert(bytes("wei quote bellow min"));
-        vm.prank(lp2);
-        exchange.addLiquidity{value: 100}(85, 100, 85);
-    }
-
-    function testAddLiquidityTokenQuoteBellowMin()
-        public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
-        swapWeiForTokens(swapper, 500, 400)
-    {
-        createAllowance(lp2, address(exchange), LP2_TOKEN_BALANCE);
-        vm.expectRevert(bytes("token quote bellow min"));
-        vm.prank(lp2);
-        exchange.addLiquidity{value: 100}(85, 100, 85);
-    }
-
-    function testAddLiquidityTokenTransferNotAllowed() public initializedExchange(LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Not enough token allowed for transfer"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, LP2_TOKEN_BALANCE, LP2_TOKEN_BALANCE);
+        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, LP2_TOKEN_BALANCE);
     }
 
-    function testAddLiquidityInsufficientTokenBalance() public initializedExchange(LP_TOKEN_BALANCE, lp) {
-        vm.expectRevert(bytes("Not enough tokens"));
+    function testAddLiquidityInsufficientTokenBalance()
+        public
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
+    {
+        vm.expectRevert(bytes("Not enough token balance"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, LP2_TOKEN_BALANCE + 1, LP2_TOKEN_BALANCE);
+        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, LP2_TOKEN_BALANCE + 1);
     }
 
-    function testAddLiquidityMinTokenAmountBellowAmount() public initializedExchange(LP_TOKEN_BALANCE, lp) {
-        vm.expectRevert(bytes("minTokenAmount can't be less than tokenAmount"));
+    function testAddLiquidityMaxTokenAmountIsZero()
+        public
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
+    {
+        vm.expectRevert(bytes("maxTokenAmount can't be 0"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, LP2_TOKEN_BALANCE, LP2_TOKEN_BALANCE + 1);
+        exchange.addLiquidity{value: 10}(10, 0);
     }
 
-    function testAddLiquidityNoTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
-        vm.expectRevert(bytes("No tokens provided"));
+    function testAddLiquidityMinLiquidityIsZero() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
+        vm.expectRevert(bytes("minLiquidity can't be 0"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: LP_WEI_BALANCE}(LP_WEI_BALANCE, 0, 0);
+        exchange.addLiquidity{value: 10}(0, 0);
     }
 
-    function testAddLiquidityMinWeiAmountBellowAmount() public initializedExchange(LP_TOKEN_BALANCE, lp) {
-        vm.expectRevert(bytes("minWeiAmount can't be more than msg.value"));
-        vm.prank(lp2);
-        exchange.addLiquidity{value: 10}(11, 0, 0);
-    }
-
-    function testAddLiquidityNoEth() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testAddLiquidityNoEth() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("No ETH provided"));
         vm.prank(lp2);
-        exchange.addLiquidity{value: 0}(0, 0, 0);
+        exchange.addLiquidity{value: 0}(0, 0);
     }
 
-    function testRemoveLiquidityNoEth() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testRemoveLiquidityNoEth() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Amount must be greater than zero"));
         vm.prank(lp);
-//        TODO: FIX TEST
-//        exchange.removeLiquidity(0);
+        exchange.removeLiquidity(0, 0, 0);
     }
 
-    function testRemoveLiquidityNotEnoughLiquidity() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testRemoveLiquidityNotEnoughLiquidity()
+        public
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
+    {
         vm.expectRevert(bytes("Not enough liquidity"));
         vm.prank(lp);
-//        TODO: FIX TEST
-//        exchange.removeLiquidity(1000000);
+        exchange.removeLiquidity(1000000, 0, 0);
     }
 
-//    TODO: No liquidity found for sender
-//    TODO: Insufficient liquidity
+    //    TODO: No liquidity found for sender
+    //    TODO: Insufficient liquidity
 
-    function testSwapETHForTokensTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapETHForTokensTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -209,7 +208,7 @@ contract BBExchangeTest is Test {
         assertEq(token.balanceOf(swapper), SWAPPERS_TOKEN_BALANCE + 95);
     }
 
-    function testSwapETHForTokensUpdateReserves() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapETHForTokensUpdateReserves() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -222,7 +221,7 @@ contract BBExchangeTest is Test {
         assertEq(expectedWeiReserves, exchange.weiReserves());
     }
 
-    function testSwapETHForTokensTooMuchSlippage() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapETHForTokensTooMuchSlippage() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -230,19 +229,19 @@ contract BBExchangeTest is Test {
         exchange.swapETHForTokens{value: swapAmount}(96);
     }
 
-    function testSwapETHForTokensNotEnoughLiquidity() public initializedExchange(2, lp) {
+    function testSwapETHForTokensNotEnoughLiquidity() public initializedExchange(2, 2, lp) {
         vm.expectRevert(bytes("Not enough liquidity"));
         vm.prank(swapper);
         exchange.swapETHForTokens{value: 2}(0);
     }
 
-    function testSwapETHForTokensNoETH() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapETHForTokensNoETH() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Need ETH to swap"));
         vm.prank(swapper);
         exchange.swapETHForTokens{value: 0}(0);
     }
 
-    function testSwapTokensForETHTransferEth() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHTransferEth() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -251,7 +250,7 @@ contract BBExchangeTest is Test {
         assertEq(swapper.balance, SWAPPERS_WEI_BALANCE + 95);
     }
 
-    function testSwapTokensForETHUpdateReserves() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHUpdateReserves() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -264,7 +263,7 @@ contract BBExchangeTest is Test {
         assertEq(expectedWeiReserves, exchange.weiReserves());
     }
 
-    function testSwapTokensForETHTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHTransferTokens() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -274,7 +273,7 @@ contract BBExchangeTest is Test {
         assertEq(LP_TOKEN_BALANCE + swapAmount, token.balanceOf(address(exchange)));
     }
 
-    function testSwapTokensForETHTooMuchSlippage() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHTooMuchSlippage() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         uint256 swapAmount = 100;
         vm.prank(swapper);
@@ -282,14 +281,17 @@ contract BBExchangeTest is Test {
         exchange.swapTokensForETH(swapAmount, 96);
     }
 
-    function testSwapTokensForETHNotEnoughLiquidity() public initializedExchange(2, lp) {
+    function testSwapTokensForETHNotEnoughLiquidity() public initializedExchange(2, 2, lp) {
         createAllowance(swapper, address(exchange), SWAPPERS_TOKEN_BALANCE);
         vm.expectRevert(bytes("Not enough liquidity"));
         vm.prank(swapper);
         exchange.swapTokensForETH(2, 0);
     }
 
-    function testSwapTokensForETHProvidedMoreTokensThanAllowed() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHProvidedMoreTokensThanAllowed()
+        public
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
+    {
         vm.expectRevert(bytes("Not enough token allowed for transfer"));
         vm.prank(swapper);
         exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE, 0);
@@ -297,26 +299,26 @@ contract BBExchangeTest is Test {
 
     function testSwapTokensForETHProvidedMoreTokensThanBalanceAllows()
         public
-        initializedExchange(LP_TOKEN_BALANCE, lp)
+        initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp)
     {
         vm.expectRevert(bytes("Not enough tokens"));
         vm.prank(swapper);
         exchange.swapTokensForETH(SWAPPERS_TOKEN_BALANCE + 1, 0);
     }
 
-    function testSwapTokensForETHNoTokens() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testSwapTokensForETHNoTokens() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Need tokens to swap"));
         vm.prank(swapper);
         exchange.swapTokensForETH(0, 0);
     }
 
-    function testGetTokenAmountCorrect() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testGetTokenAmountCorrect() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         (uint256 tokenAmount, uint256 withFee) = exchange.getTokenAmount(100);
         assertEq(tokenAmount, 98);
         assertEq(withFee, 95);
     }
 
-    function testGetTokenAmountZeroWeiAmount() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testGetTokenAmountZeroWeiAmount() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Wei amount must be greater than zero"));
         exchange.getTokenAmount(0);
     }
@@ -326,13 +328,13 @@ contract BBExchangeTest is Test {
         exchange.getTokenAmount(1);
     }
 
-    function testGetWeiAmountCorrect() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testGetWeiAmountCorrect() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         (uint256 weiAmount, uint256 withFee) = exchange.getWeiAmount(100);
         assertEq(weiAmount, 98);
         assertEq(withFee, 95);
     }
 
-    function testGetWeiAmountZeroTokenAmount() public initializedExchange(LP_TOKEN_BALANCE, lp) {
+    function testGetWeiAmountZeroTokenAmount() public initializedExchange(LP_TOKEN_BALANCE, LP_TOKEN_BALANCE, lp) {
         vm.expectRevert(bytes("Token amount must be greater than zero"));
         exchange.getWeiAmount(0);
     }

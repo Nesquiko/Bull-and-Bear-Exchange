@@ -50,11 +50,23 @@ pragma solidity ^0.8.18;
  *            x * fee_denominator + (fee_denominator - fee_numerator) * dx
  */
 library BBLibrary {
+    /// @param swapAmount (dx) amount of tokens/wei to convert
+    /// @param swapReserve (x) amount of converted asset in reserves
+    /// @param targetReserve (y) amount target asset in reserves
+    /// @return Amount of the target asset at current exchange rate
+    function convertAtExchangeRate(uint256 swapAmount, uint256 swapReserve, uint256 targetReserve)
+        internal
+        pure
+        returns (uint256)
+    {
+        return (swapAmount * targetReserve) / swapReserve;
+    }
+
     /// @param swapAmount (dx) amount of tokens/wei to swap
     /// @param swapReserve (x) amount of swapped asset in reserves
     /// @param targetReserve (y) amount of asset for which the swapper is swapping
-    /// @return Amount of the swap target asset at current reserves
-    function calculateAmountOut(uint256 swapAmount, uint256 swapReserve, uint256 targetReserve)
+    /// @return Amount of the swap target asset at current exchange rate
+    function convertToSwapAmount(uint256 swapAmount, uint256 swapReserve, uint256 targetReserve)
         internal
         pure
         returns (uint256)
@@ -69,8 +81,8 @@ library BBLibrary {
     /// @param targetReserve (y) amount of asset for which the swapper is swapping
     /// @param feeNum numerator of the fee fraction
     /// @param feeDenom denominator of the fee fraction
-    /// @return Amount of the swap target asset at current reserves with fee accounted for
-    function calculateAmountOutWithFee(
+    /// @return Amount of the swap target asset at current exchange rate with fee accounted
+    function convertToSwapAmountWithFee(
         uint256 swapAmount,
         uint256 swapReserve,
         uint256 targetReserve,
@@ -81,20 +93,5 @@ library BBLibrary {
         uint256 numerator = targetReserve * feeInverse * swapAmount;
         uint256 denominator = swapReserve * feeDenom + feeInverse * swapAmount;
         return numerator / denominator;
-    }
-
-    /// @notice Calculates the quote of base asset to quoted asset at current exchange rate
-    /// @param baseAmount amount of tokens/wei as base for the quote
-    /// @param baseReserve amount of base asset in reserves
-    /// @param quoteReserve amount of quoted assets in reserves
-    /// @return equivalent amount of the base asset to the quoted one
-    function calculateQuote(uint256 baseAmount, uint256 baseReserve, uint256 quoteReserve)
-        internal
-        pure
-        returns (uint256)
-    {
-        require(baseAmount > 0, "baseReserve can't be zero");
-        require(baseReserve > 0 && quoteReserve > 0, "invalid reserves");
-        return baseAmount * quoteReserve / baseReserve;
     }
 }

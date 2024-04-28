@@ -70,71 +70,38 @@ contract BBExchange is Ownable {
         return (swapFeeNumerator, swapFeeDenominator);
     }
 
-    // ============================================================
-    //                    FUNCTIONS TO IMPLEMENT
-    // ============================================================
-
-    /* ========================= Liquidity Provider Functions =========================  */
-
-    /// @notice Adds liquidity given a supply of ETH and BBToken
-    /// @notice liquidity will be added in rate range from minWeiAmount/tokenAmount to msg.value/minTokenAmount
-    /// @dev inspired by https://docs.uniswap.org/contracts/v2/guides/smart-contract-integration/providing-liquidity
-    ///     and https://docs.uniswap.org/contracts/v2/reference/smart-contracts/router-02#addliquidity
+    /// @notice Adds liquidity given a supply of Eth and BBToken
     /// @dev msg.value amount of wei to be added to lp
-    /// @param minWeiAmount in case of deprecation of wei against BBToken (meaning,
-    ///     BBToken has appreciated), this serves as tolerance/protection mechanism
-    ///     for the liquidity provider, ensuresing liquidity isn't added at
-    ///     "bad" exchange rate (each liquidity provider must calculate and consider
-    ///     what is "bad" exchange rate for him/her)
-    /// @param tokenAmount amount of tokens to be added to lp
-    /// @param minTokenAmount in case of deprecation of BBToken against ETH (meaning,
-    ///     ETH has appreciated), this serves as tolerance/protection mechanism
-    ///     for the liquidity provider, ensuresing liquidity isn't added at
-    ///     "bad" exchange rate (each liquidity provider must calculate and consider
-    ///     what is "bad" exchange rate for him/her)
-    function addLiquidity(uint256 minWeiAmount, uint256 tokenAmount, uint256 minTokenAmount) external payable {
+    /// @param minLiquidity lower bound guard agains rate change
+    /// @param maxTokenAmount upper bound guard agains rate change
+    function addLiquidity(uint256 minLiquidity, uint256 maxTokenAmount) external payable {
         uint256 weiAmount = msg.value;
         require(weiAmount > 0, "No ETH provided");
-        require(weiAmount >= minWeiAmount, "minWeiAmount can't be more than msg.value");
-        require(tokenAmount > 0, "No tokens provided");
-        require(tokenAmount >= minTokenAmount, "minTokenAmount can't be less than tokenAmount");
-        require(token.balanceOf(msg.sender) >= tokenAmount, "Not enough tokens");
-        require(token.allowance(msg.sender, address(this)) >= tokenAmount, "Not enough token allowed for transfer");
+        require(minLiquidity > 0, "minLiquidity can't be 0");
+        require(maxTokenAmount > 0, "maxTokenAmount can't be 0");
+        require(token.balanceOf(msg.sender) >= maxTokenAmount, "Not enough token balance");
+        require(token.allowance(msg.sender, address(this)) >= maxTokenAmount, "Not enough token allowed for transfer");
 
-        uint256 weiLiquidityAmount;
-        uint256 tokenLiquidityAmount;
+        uint256 tokenAmount = BBLibrary.convertAtExchangeRate(weiAmount, weiReserves, tokenReserves);
+        require(tokenAmount <= maxTokenAmount, "Rate change exceeds desired max token amount");
+        // what portion of new liquidity was provided, can be calculated through wei,
+        // or token, doesn't matter, but since only wei amount is exact
+        // (tokenAmount can change based on time of tx processing), use wei instead.
+        uint256 liquidityProvided = weiAmount * totalLiquidity / weiReserves;
+        require(liquidityProvided >= minLiquidity, "Rate change exceeds desired minimum liquidity");
 
-        uint256 tokenQuote = BBLibrary.calculateQuote(weiAmount, weiReserves, tokenReserves);
-        if (tokenQuote <= tokenAmount) {
-            // Wei depreciated, BBToken appreciated, meaning the rate will be weiAmount/tokenQuote
-            require(tokenQuote >= minTokenAmount, "token quote bellow min");
-            weiLiquidityAmount = weiAmount;
-            tokenLiquidityAmount = tokenQuote;
-        } else {
-            // Wei appreciated, BBToken depreciated, meaning the rate will be weiQuote/tokenAmount
-            uint256 weiQuote = BBLibrary.calculateQuote(tokenAmount, tokenReserves, weiReserves);
-            require(weiQuote >= minWeiAmount, "wei quote bellow min");
-            weiLiquidityAmount = weiQuote;
-            tokenLiquidityAmount = tokenAmount;
-        }
-
-        bool succes = token.transferFrom(msg.sender, address(this), tokenLiquidityAmount);
-        require(succes, "token transfer failed");
-        if (weiAmount - weiLiquidityAmount != 0) {
-            (succes,) = msg.sender.call{value: weiAmount - weiLiquidityAmount}("");
-            require(succes, "wei transfer failed");
-        }
-
-        uint256 liquidity = weiLiquidityAmount * totalLiquidity / weiReserves;
         if (lps[msg.sender] == 0) {
             lpProviders.push(msg.sender);
         }
-        lps[msg.sender] += liquidity;
-        totalLiquidity += liquidity;
+        lps[msg.sender] += liquidityProvided;
+        totalLiquidity += liquidityProvided;
 
-        weiReserves += weiLiquidityAmount;
-        tokenReserves += tokenLiquidityAmount;
+        weiReserves += msg.value;
+        tokenReserves += tokenAmount;
         k = weiReserves * tokenReserves;
+
+        bool succes = token.transferFrom(msg.sender, address(this), tokenAmount);
+        require(succes, "token transfer failed");
     }
 
     // Function removeLiquidity: Removes liquidity given the desired amount of ETH to remove.
@@ -241,14 +208,14 @@ contract BBExchange is Ownable {
     /// @dev msg.value is how many wei the sender is swapping
     /// @param minTokenAmount value with applied tolerable slippage
     function swapETHForTokens(uint256 minTokenAmount) external payable {
-        uint256 ethAmount = msg.value;
-        require(ethAmount > 0, "Need ETH to swap");
+        uint256 weiAmount = msg.value;
+        require(weiAmount > 0, "Need ETH to swap");
 
-        (uint256 tokenAmount, uint256 withFee) = getTokenAmount(ethAmount);
+        (uint256 tokenAmount, uint256 withFee) = getTokenAmount(weiAmount);
         require(tokenReserves - tokenAmount > MIN_LIQUIDITY, "Not enough liquidity");
         require(withFee >= minTokenAmount, "Too much slippage");
 
-        weiReserves += ethAmount;
+        weiReserves += weiAmount;
         tokenReserves -= withFee;
 
         token.transfer(msg.sender, withFee);
@@ -262,8 +229,8 @@ contract BBExchange is Ownable {
         require(tokenReserves > 0 && weiReserves > 0, "Invalid reserves");
 
         return (
-            BBLibrary.calculateAmountOut(tokenAmount, tokenReserves, weiReserves),
-            BBLibrary.calculateAmountOutWithFee(
+            BBLibrary.convertToSwapAmount(tokenAmount, tokenReserves, weiReserves),
+            BBLibrary.convertToSwapAmountWithFee(
                 tokenAmount, tokenReserves, weiReserves, swapFeeNumerator, swapFeeDenominator
                 )
         );
@@ -277,8 +244,8 @@ contract BBExchange is Ownable {
         require(tokenReserves > 0 && weiReserves > 0, "Invalid reserves");
 
         return (
-            BBLibrary.calculateAmountOut(weiAmount, weiReserves, tokenReserves),
-            BBLibrary.calculateAmountOutWithFee(
+            BBLibrary.convertToSwapAmount(weiAmount, weiReserves, tokenReserves),
+            BBLibrary.convertToSwapAmountWithFee(
                 weiAmount, weiReserves, tokenReserves, swapFeeNumerator, swapFeeDenominator
                 )
         );
