@@ -21,9 +21,13 @@ export const useLiquidity = () => {
       amtEth.value * ethRate * (1 + maxSlippageLiquid.value / 100)
     );
 
-    await tokenContract.approve(exchangeAddress, maxTokenAmount);
+    const signer = await provider.getSigner(selectedAccount);
+
+    await tokenContract
+      .connect(signer)
+      .approve(exchangeAddress, maxTokenAmount);
     await exchangeContract
-      .connect(await provider.getSigner(selectedAccount))
+      .connect(signer)
       .addLiquidity(minLiqidity, maxTokenAmount, { value: amtEth.value });
 
     amtEth.value = undefined;
@@ -32,43 +36,44 @@ export const useLiquidity = () => {
 
   const removeLiquidity = async (selectedAccount: string, ethRate: number) => {
     if (!amtEth.value || !maxSlippageLiquid.value) return;
-    try {
-      await exchangeContract
-        .connect(await provider.getSigner(selectedAccount))
-        .removeLiquidity(
-          100,
-          amtEth.value * (maxSlippageLiquid.value / 100),
-          amtEth.value * ethRate * (maxSlippageLiquid.value / 100)
-        );
-      amtEth.value = '';
-      maxSlippageLiquid.value = '';
-    } catch (e) {
-      console.log(e);
-    }
+
+    const minWeiAmount = Math.floor(
+      amtEth.value * (1 - maxSlippageLiquid.value / 100)
+    );
+    const minTokenAmount = Math.floor(
+      amtEth.value * ethRate * (1 - maxSlippageLiquid.value / 100)
+    );
+
+    await exchangeContract
+      .connect(await provider.getSigner(selectedAccount))
+      .removeLiquidity(amtEth.value, minWeiAmount, minTokenAmount);
+
+    amtEth.value = undefined;
+    maxSlippageLiquid.value = undefined;
   };
 
   const removeAllLiquidity = async (
     selectedAccount: string,
-    ethRate: number
+    ethRate: number,
+    liquidity: number
   ) => {
     if (!maxSlippageLiquid.value) return;
-    try {
-      await exchangeContract
-        .connect(await provider.getSigner(selectedAccount))
-        .removeAllLiquidity(
-          amtEth.value * (maxSlippageLiquid.value / 100),
-          amtEth.value * ethRate * (maxSlippageLiquid.value / 100)
-        );
-      amtEth.value = '';
-      maxSlippageLiquid.value = '';
-    } catch (e) {
-      console.log(e);
-    }
 
-    console.log('remove all liquidity');
+    const minWeiAmount = Math.floor(
+      liquidity * (1 - maxSlippageLiquid.value / 100)
+    );
+    const minTokenAmount = Math.floor(
+      liquidity * ethRate * (1 - maxSlippageLiquid.value / 100)
+    );
 
-    maxSlippageLiquid.value = '';
+    await exchangeContract
+      .connect(await provider.getSigner(selectedAccount))
+      .removeAllLiquidity(minWeiAmount, minTokenAmount);
+
+    amtEth.value = undefined;
+    maxSlippageLiquid.value = undefined;
   };
+
   return {
     amtEth,
     maxSlippageLiquid,

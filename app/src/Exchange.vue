@@ -18,7 +18,7 @@
         <div class="grid lg:grid-cols-3 text-center">
           <p class="text-xl">{{ weiBalance }} Wei</p>
           <p class="text-xl">{{ tokenBalance }} {{ tokenSymbol }}</p>
-          <p class="text-xl">{{ lps }} Liquidity provided</p>
+          <p class="text-xl">{{ availableLiquidity }} Liquidity provided</p>
         </div>
       </div>
       <div>
@@ -96,24 +96,8 @@
                 />
                 <div>
                   <button @click="onAddLiquidity()">Add Liquidity</button>
-                  <button
-                    @click="
-                      removeLiquidity(
-                        selectedAccount.address,
-                        poolState.tokenEthRate
-                      )
-                    "
-                  >
-                    Remove Liquidity
-                  </button>
-                  <button
-                    @click="
-                      removeAllLiquidity(
-                        selectedAccount.address,
-                        poolState.tokenEthRate
-                      )
-                    "
-                  >
+                  <button @click="onRemoveLiquidity">Remove Liquidity</button>
+                  <button @click="onRemoveAllLiquidity">
                     Remove All Liquidity
                   </button>
                 </div>
@@ -172,14 +156,16 @@ const swapTokenForWei = async () => {
 
 const weiBalance = ref(0n);
 const tokenBalance = ref(0n);
-const lps = ref(0n);
+const availableLiquidity = ref(0n);
 
 const updateBalances = async () => {
   weiBalance.value = await provider.getBalance(selectedAccount.value.address);
   tokenBalance.value = await tokenContract.balanceOf(
     selectedAccount.value.address
   );
-  lps.value = await exchangeContract.lpLiquidity(selectedAccount.value.address);
+  availableLiquidity.value = await exchangeContract.lpLiquidity(
+    selectedAccount.value.address
+  );
 };
 updateBalances();
 
@@ -189,6 +175,22 @@ const onAddLiquidity = async () => {
   await addLiquidity(
     selectedAccount.value.address,
     poolState.value.tokenEthRate
+  );
+  poolState.value = await getPoolState();
+  updateBalances();
+};
+
+const onRemoveLiquidity = async () => {
+  removeLiquidity(selectedAccount.value.address, poolState.value.tokenEthRate);
+  poolState.value = await getPoolState();
+  updateBalances();
+};
+
+const onRemoveAllLiquidity = async () => {
+  removeAllLiquidity(
+    selectedAccount.value.address,
+    poolState.value.tokenEthRate,
+    Number(availableLiquidity.value)
   );
   poolState.value = await getPoolState();
   updateBalances();
